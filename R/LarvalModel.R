@@ -1,5 +1,5 @@
 ## Larval model
-## SD 23/05/2018
+## SD 19/06/2018
 
 # which machine are you on?
 machine <- "/home" # linux desktop (& laptop?)
