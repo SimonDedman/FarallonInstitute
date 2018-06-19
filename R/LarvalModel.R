@@ -60,7 +60,7 @@ goodcols <- c("MEI_PreW","MEI_Spring", "NPGO_PreW", "NPGO_Spring","NPC_Str_Lat",
               "CrsWnd_PreW_46011","CrsWnd_Spr_46011","CrsWnd_PreW_46012",
               "CrsWnd_Spr_46012","BUI33N_PreW","BUI33N_Spring","PDO_PreW",
               "PDO_Spring","LaJ_T_PreW","LaJ_T_Spring","Sml_P","Euphausiids",
-              "C_Hake","C_SeaLion","C_Albacore","C_Sablefish","C_Halibut",
+              "C_Hake","C_SeaLion","C_Albacore","C_Halibut",
               "C_SoShWa","C_HBW","FishLand","Catch_Sard","Biom_Sard_Alec",
               "Biom_Sard_Andre","Hake_Biom","Msquid_Biom","Rockfish_Biom","Krill_Biom")
 
