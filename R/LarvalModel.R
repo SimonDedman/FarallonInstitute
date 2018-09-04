@@ -1,6 +1,6 @@
 ## Larval model
 ## SD started 19/06/2018
-## Latest edit 13/08/2018
+## Latest edit 29/08/2018
 
 #Install packages####
 # install.packages("devtools")
@@ -14,7 +14,7 @@ machine <- "C:/Users"# windows laptop
 
 ##1 Import, clean, set variables####
 # read in csv created from Data Structure Template excel
-Annual <- read.csv(paste0(machine, '/simon/Dropbox/Farallon Institute/Data & Analysis/Data Structure Template 2018.08.06.csv'),
+Annual <- read.csv(paste0(machine, '/simon/Dropbox/Farallon Institute/Data & Analysis/Data Structure Template 2018.08.29.csv'),
                    na.strings = "")
 # Annual <- Annual[5:nrow(Annual),] # Trim first 4 rows. Now done beforehand so data columns aren't imported as factors
 
@@ -72,10 +72,11 @@ AdultExpvars <- c("A_Tot_B_Y.1", "MEI_PreW", "MEI_Spring", "NPGO_PreW",
                   "Stability_nearshore", "PDO_PreW",
                   "PDO_Spring","LaJ_T_PreW","LaJ_T_Spring","TempAtDep_all",
                   "TempAtDep_nearshore", "SalAtDep_all", "SalAtDep_nearshore",
+                  "O2AtDep_all", "O2AtDep_nearshore",
                   "ChlA_all", "ChlA_nearshore","Sml_P", "Euphausiids",
-                  "Hake", "C_SeaLion","C_Albacore","C_Halibut","C_Murre",
-                  "C_SoShWa","C_HBW","C_Hsquid", "FishLand","MktSqdCatch",
-                  "Catch_Sard","Biom_Sard_Alec")
+                  "Hake", "C_SeaLion","Albacore","Halibut","C_Murre",
+                  "SoShWa","HBW","Hsquid", "FishLand","MktSqdCatch",
+                  "Catch_Sard","Biom_Sard_Alec", "Msquid_CPUE", "Krill_CPUE")
 
 LarvalResvar <- "Anch_Larvae"
 LarvalExpvars <- c("Anch_Egg", "A_Tot_B", "MEI_PreW", "MEI_Spring", "NPGO_PreW",
@@ -89,8 +90,8 @@ LarvalExpvars <- c("Anch_Egg", "A_Tot_B", "MEI_PreW", "MEI_Spring", "NPGO_PreW",
                   "Stability_nearshore", "PDO_PreW",
                   "PDO_Spring","LaJ_T_PreW","LaJ_T_Spring","TempAtDep_all",
                   "TempAtDep_nearshore", "SalAtDep_all", "SalAtDep_nearshore",
-                  "ChlA_all", "ChlA_nearshore","Sml_P", "Lrg_P",
-                  "Hake", "Jmac", "Cmac", "Catch_Sard","Biom_Sard_Alec")
+                  "O2AtDep_all", "O2AtDep_nearshore", "ChlA_all", "ChlA_nearshore","Sml_P", "Lrg_P",
+                  "Hake", "Jmac", "Cmac", "Catch_Sard","Biom_Sard_Alec", "Krill_CPUE")
 
 EggResvar <- "Anch_Egg"
 EggExpvars <- c("A_Tot_B", "MEI_PreW", "MEI_Spring", "NPGO_PreW",
@@ -104,7 +105,8 @@ EggExpvars <- c("A_Tot_B", "MEI_PreW", "MEI_Spring", "NPGO_PreW",
                    "Stability_nearshore", "PDO_PreW",
                    "PDO_Spring","LaJ_T_PreW","LaJ_T_Spring","TempAtDep_all",
                    "TempAtDep_nearshore", "SalAtDep_all", "SalAtDep_nearshore",
-                   "Lrg_P", "Hake", "Jmac", "Cmac", "Catch_Sard","Biom_Sard_Alec")
+                   "O2AtDep_all", "O2AtDep_nearshore", "Lrg_P", "Hake", "Jmac",
+                   "Cmac", "Catch_Sard","Biom_Sard_Alec", "Krill_CPUE")
 
 AdultResvarCol <- match(AdultResvar, names(Annual))
 AdultExpvarsCols <- match(AdultExpvars, names(Annual))
@@ -120,7 +122,7 @@ EggSamples <- Annual[-which(is.na(Annual[EggResvar])),]
 
 #2 Run code####
 setwd(paste0(machine, "/simon/Dropbox/Farallon Institute/Data & Analysis/ModelOutputs/"))
-#2.1 Adults####
+#2.1 Adult####
 # dir.create("Adults")
 setwd("Adults")
 # 57 obs
@@ -133,25 +135,24 @@ gbm.auto(expvar = AdultExpvarsCols,
          fam1 = "gaussian",
          savegbm = FALSE,
          BnW = FALSE,
-         simp = T,
+         #simp = T,
+         simp = F,
          multiplot = F,
          varint = F)
-
-# Error in FUN(X[[i]], ...) : 
-#   only defined on a data frame with all numeric variables
 
 setwd("../")
 
 
 #2.2 Larvae####
 # 44 obs
-dir.create("Larvae")
+# dir.create("Larvae")
 setwd("Larvae")
 
 gbm.auto(expvar = LarvalExpvarsCols,
          resvar = LarvalResvar,
          samples = LarvalSamples,
-         lr = c(0.001),
+         lr = c(0.0001),
+         bf = 0.8,
          ZI = F,
          fam1 = "gaussian",
          savegbm = FALSE,
@@ -160,10 +161,14 @@ gbm.auto(expvar = LarvalExpvarsCols,
          multiplot = F,
          varint = F)
 
+# 2018.08.29 dataset size is too small or subsampling rate is too large: nTrain*bag.fraction <= n.minobsinnode
+# changed bf to 0.8
+# Error: $ operator is invalid for atomic vectors
+
 setwd("../")
 #2.3 Eggs####
 #56 obs
-dir.create("Eggs")
+# dir.create("Eggs")
 setwd("Eggs")
 
 gbm.auto(expvar = EggExpvarsCols,
@@ -180,13 +185,6 @@ gbm.auto(expvar = EggExpvarsCols,
 
 setwd("../")
 
-# Error in FUN(X[[i]], ...) : 
-#   only defined on a data frame with all numeric variables
-# Make sure columns are read in correctly, numbers not factors etc. But should be able to handle factors? Used to...
-
-# Error in plot.new() : figure margins too large
-# gbm.uto L502/515, and/or RStudio's fault?
-# fixed with multiplot code addition
 # 
 # [1] "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX      Bar plots plotted      XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
 # gbm.interactions - version 2.9
@@ -218,9 +216,11 @@ gbm.auto(expvar = expvars,
 # Erik's optimiser?
 
 #3 whittle variables####
+#3.1 pairplots####
 # Do the massive pairplot analysis to see autocorrelated variables. They should
 # be intuitively obvious anyway e.g. 20 wind variables!
 # C:\Users\simon\Dropbox\Galway\Analysis\R\James' R code\pair_plots_with_panel_options.R
+# shouldn't use colnumbers since they change, should use colnames. All below are wrong except o2 @ 2018.08.29
 colnames(Annual)
 
 pairs(Annual,
@@ -389,6 +389,14 @@ pairs(Annual[c(54:55)], #Sal
       diag.panel = panel.hist,
       main = "pair plots of variables")
 # 0.89 use nearshore
+ 
+colnames(Annual)
+pairs(Annual[c(55:56)], #o2
+      lower.panel = panel.lm,
+      upper.panel = panel.cor,
+      diag.panel = panel.hist,
+      main = "pair plots of variables")
+# 0.5 could use both, use nearshore for the time being
 
 pairs(Annual[c(56:58,63,65)], #Plankton
       lower.panel = panel.lm,
@@ -437,7 +445,46 @@ pairs(Annual[c(92,94:96)], #sardine
 # alec & andre 0.98 use 1 Alec
 # Alec vs catch 0.62 use Alec or both? Alec.
 
-#3.1 adults####
+#3.2 lm plots####
+source(paste0(machine, '/simon/Dropbox/Galway/Analysis/R/My Misc Scripts/LinearModelPlot.R')) # load my lm plotting function
+setwd(paste0(machine, "/simon/Dropbox/Farallon Institute/Data & Analysis/ModelOutputs/"))
+dir.create("lm plots")
+setwd("lm plots")
+dir.create("Adults")
+setwd("Adults")
+# loop through all expvars against resvar:
+# Adults
+for(i in 1:length(AdultExpvars)){
+lmplot(x = Annual[,AdultExpvars[i]],
+       y = Annual[,AdultResvar],
+       xname = AdultExpvars[i],
+       yname = AdultResvar)
+}
+setwd("../")
+dir.create("Larvae")
+setwd("Larvae")
+
+# Larvae
+for(i in 1:length(LarvalExpvars)){
+  lmplot(x = Annual[,LarvalExpvars[i]],
+         y = Annual[,LarvalResvar],
+         xname = LarvalExpvars[i],
+         yname = LarvalResvar)
+}
+setwd("../")
+dir.create("Eggs")
+setwd("Eggs")
+
+# Eggs
+for(i in 1:length(EggExpvars)){
+  lmplot(x = Annual[,EggExpvars[i]],
+         y = Annual[,EggResvar],
+         xname = EggExpvars[i],
+         yname = EggResvar)
+}
+setwd("../")
+
+#3.3 Adult vars####
 # Report: training data correlation 0.678, simp 0.661, simp dropped A_Tot_B_Y.1
 # & Biom_Sard_Alec which were the most important variables! Sard 46% inf,
 # totBy-1 25%. Weird. Labels are wrong it's other way round, changed in gbmauto
@@ -447,21 +494,21 @@ AdultExpvars <- c("A_Tot_B_Y.1", "MEI_Spring","NPGO_Spring","NPC_Str_Lat",
                   "SeaLevLA_Spring", "Ek_Spr_46025","FourDCP_Spr_46025",
                   "CrsWnd_Spr_46025","BUI33N_Spring",
                   "Stability_nearshore", "TempAtDep_nearshore", "SalAtDep_nearshore",
-                  "ChlA_nearshore","Sml_P", "Euphausiids",
-                  "Hake", "C_SeaLion","C_Albacore","C_Halibut","C_Murre",
-                  "C_SoShWa","C_HBW","C_Hsquid", "FishLand","MktSqdCatch",
-                  "Biom_Sard_Alec","Krill_Biom")
+                  "O2AtDep_nearshore","ChlA_nearshore","Sml_P", "Euphausiids",
+                  "Hake", "C_SeaLion","Albacore","Halibut","C_Murre",
+                  "SoShWa","HBW","Hsquid", "FishLand","MktSqdCatch",
+                  "Biom_Sard_Alec","Krill_Biom", "Msquid_CPUE", "Krill_CPUE")
 
-#3.2 larvae####
+#3.4 larvae vars####
 LarvalResvar <- "Anch_Larvae"
 LarvalExpvars <- c("Anch_Egg", "A_Tot_B", "MEI_Spring",
                    "NPGO_Spring","NPC_Str_Lat","SeaLevLA_Spring",
                    "Ek_Spr_46025","FourDCP_Spr_46025","CrsWnd_PreW_46025","BUI33N_Spring",
                    "Stability_nearshore", "TempAtDep_nearshore", "SalAtDep_nearshore",
-                   "ChlA_nearshore","Sml_P", "Lrg_P",
-                   "Hake", "Jmac", "Cmac", "Biom_Sard_Alec","Krill_Biom")
+                   "O2AtDep_nearshore","ChlA_nearshore","Sml_P", "Lrg_P",
+                   "Hake", "Jmac", "Cmac", "Biom_Sard_Alec","Krill_Biom", "Krill_CPUE")
 
-#3.3 eggs####
+#3.5 egg vars####
 EggResvar <- "Anch_Egg"
 EggExpvars <- c("A_Tot_B", "MEI_Spring",
                 "NPGO_Spring","NPC_Str_Lat","SeaLevLA_Spring",
@@ -469,7 +516,8 @@ EggExpvars <- c("A_Tot_B", "MEI_Spring",
                 "BUI33N_Spring",
                 "Stability_nearshore",
                 "TempAtDep_nearshore", "SalAtDep_nearshore",
-                "Lrg_P", "Hake", "Jmac", "Cmac", "Biom_Sard_Alec","Krill_Biom")
+                "O2AtDep_nearshore",
+                "Lrg_P", "Hake", "Jmac", "Cmac", "Biom_Sard_Alec","Krill_Biom", "Krill_CPUE")
 
 AdultResvarCol <- match(AdultResvar, names(Annual))
 AdultExpvarsCols <- match(AdultExpvars, names(Annual))
@@ -482,11 +530,6 @@ EggExpvarsCols <- match(EggExpvars, names(Annual))
 AdultSamples <- Annual[-which(is.na(Annual[AdultResvar])),]
 LarvalSamples <- Annual[-which(is.na(Annual[LarvalResvar])),]
 EggSamples <- Annual[-which(is.na(Annual[EggResvar])),]
-
-# remove unused columns #this removes esvar from samples & changes colnumbers!
-# AdultSamples <- AdultSamples[,AdultExpvarsCols]
-# LarvalSamples <- LarvalSamples[,LarvalExpvarsCols]
-# EggSamples <- EggSamples[,EggExpvarsCols]
 
 #4 ReRun code w fewer vars####
 setwd(paste0(machine, "/simon/Dropbox/Farallon Institute/Data & Analysis/ModelOutputs/"))
@@ -504,15 +547,18 @@ gbm.auto(expvar = AdultExpvarsCols,
          # fam1 = "gaussian",
          savegbm = FALSE,
          BnW = FALSE,
-         simp = T,
+         #simp = T,
+         simp = F,
          multiplot = F,
          varint = F,
          n.trees = 10)
+# 2018.08.29 crashing Rstudio
+
 setwd("../")
 # 57 pos samples
 # variance?
 var(AdultSamples$A_Tot_B) # 344,835,667,976 variance 1/3rd of a trillion. Cool cool cool
-# why is it not running? what's so different about adults to e&l? why are there 9 fewer values?
+# why is it not running? what's so different about Adults to e&l? why are there 9 fewer values?
 # e&l have zeroes which are nonsamples which need to be removed. Need to rerun e&l now, ugh
 
 #4.2 Larvae####
@@ -595,8 +641,8 @@ LarvalExpvars <- c("MEI_Spring", "NPGO_Spring","NPC_Str_Lat",
                   "SeaLevLA_Spring","Ek_Spr_46025","FourDCP_Spr_46025",
                   "CrsWnd_PreW_46025","BUI33N_Spring","Stability_nearshore",
                   "TempAtDep_nearshore", "SalAtDep_nearshore",
-                  "ChlA_nearshore","Sml_P", "Lrg_P","Hake", "Jmac", "Cmac",
-                  "Biom_Sard_Alec","Krill_Biom")
+                  "O2AtDep_nearshore","ChlA_nearshore","Sml_P", "Lrg_P","Hake", "Jmac", "Cmac",
+                  "Biom_Sard_Alec","Krill_Biom", "Krill_CPUE")
 LarvalExpvarsCols <- match(LarvalExpvars, names(Annual))
 
 gbm.auto(expvar = LarvalExpvarsCols,
@@ -619,6 +665,13 @@ setwd("../")
 #dir.create("EggsTrim")
 setwd("EggsTrim")
 
+EggExpvars <- c("MEI_Spring","NPGO_Spring","NPC_Str_Lat","SeaLevLA_Spring",
+                "Ek_Spr_46025", "FourDCP_Spr_46025","CrsWnd_Spr_46025",
+                "BUI33N_Spring","Stability_nearshore","TempAtDep_nearshore",
+                "O2AtDep_nearshore","SalAtDep_nearshore","Lrg_P", "Hake", "Jmac", "Cmac",
+                "Biom_Sard_Alec","Krill_Biom", "Krill_CPUE")
+EggExpvarsCols <- match(EggExpvars, names(Annual))
+
 gbm.auto(expvar = EggExpvarsCols,
          resvar = EggResvar,
          samples = EggSamples,
@@ -630,19 +683,7 @@ gbm.auto(expvar = EggExpvarsCols,
          simp = T,
          multiplot = F,
          varint = F)
-# this actually works well. Need to remove A_tot_B again. And simp kept/dropped are the wrong way around still!
-# need to update gbm.auto
-# ERROR: dependencies 'maptools', 'rgdal' are not available for package 'gbm.auto'
-# Why not, both are in CRAN?
-# updated all available packages & restarted. Maptools installed. Rgdal downloading, installed, all good.
-# Rerun, still works, yay!
-# Run loop in case.
 
-EggExpvars <- c("MEI_Spring","NPGO_Spring","NPC_Str_Lat","SeaLevLA_Spring",
-                "Ek_Spr_46025", "FourDCP_Spr_46025","CrsWnd_Spr_46025",
-                "BUI33N_Spring","Stability_nearshore","TempAtDep_nearshore",
-                "SalAtDep_nearshore","Lrg_P", "Hake", "Jmac", "Cmac",
-                "Biom_Sard_Alec","Krill_Biom")
-EggExpvarsCols <- match(EggExpvars, names(Annual))
+# Run loop in case.
 
 setwd("../")
