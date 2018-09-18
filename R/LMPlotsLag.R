@@ -61,32 +61,6 @@ EggExpvars <- c("A_Tot_B", "MEI_PreW", "MEI_Spring", "NPGO_PreW",
                 "O2AtDep_all", "O2AtDep_nearshore", "Lrg_P", "Hake", "Jmac",
                 "Cmac", "Catch_Sard","Biom_Sard_Alec", "Krill_CPUE", "Krill_mgCm2")
 
-
-#REMOVETHIS####
-AdultExpvars <- c("A_Tot_B_Y.1") # fail fast, smaller list to work on
-setwd("tmp")
-
-for(i in 1:length(AdultExpvars)){
-  dir.create(AdultExpvars[i])
-  setwd(AdultExpvars[i])
-  lmplotlag(n = 0:5,      # lag year(s), single or vector
-            x = Annual[,AdultExpvars[i]], # sardine
-            y = Annual[,AdultResvar],
-            xexpvarname = AdultExpvars[i],
-            yresvarname = AdultResvar,
-            r2line = FALSE,  # turn off ablines
-            pointtext = TRUE, # turn on text labels
-            pointlabs = Annual$Year, # text labels are years
-            adj = c(0,0.5), # adj has bug numbers reversed, 
-            pointcol = rainbow(n = dim(Annual)[1], # cex col
-                          end = 0.80))
-  setwd("../")}
-
-#todo####
-#plot all without abline with pointcols only
-#plot all without abline with pointcols and pointtext
-#ENDREMOVE####
-
 # Set params for all 3 resvars
 r2line = FALSE
 adj = c(0,0.5)

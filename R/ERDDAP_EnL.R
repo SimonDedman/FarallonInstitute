@@ -159,15 +159,6 @@ eggSeason <- data.frame("DJF" = rep(NA, length(allyears)),
                         row.names = allyears) #blank dataframe
 larvalSeason <- eggSeason #duplicate for larvae
 
-eggMonth <- data.frame("Dec" = rep(NA, length(allyears)),
-                       "Jan" = rep(NA, length(allyears)),
-                       "Feb" = rep(NA, length(allyears)),
-                       "Mar" = rep(NA, length(allyears)),
-                       "Apr" = rep(NA, length(allyears)),
-                       "May" = rep(NA, length(allyears)),
-                       row.names = allyears) #blank dataframe
-larvalMonth <- eggMonth
-
 # need to populate
 # DJF = average of subset of egg$Eggs10m2 where subset is
 #  year = rowyear-1 AND month = dec
