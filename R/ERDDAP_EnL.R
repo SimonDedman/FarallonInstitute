@@ -110,7 +110,7 @@ colnames(larvae)[17] <- "datetime"
 
 
 
-#4 %sorted to %####
+#4 pct as actual pct####
 egg[,11] <- egg[,11]*100
 larvae[,11] <- larvae[,11]*100
 
@@ -148,20 +148,25 @@ larvae$month <- month(larvae$datetime)
 # - per season as defined by date ranges
 # Averaged within those ranges.
 # dataframe format: year (rows), season (columns), average (values)
-
-yearrange <- range(year(egg$datetime)) # year range
-allyears <- seq(from = yearrange[1], to = yearrange[2], by = 1) # year range vector
+#6.1 create dfs####
+yearrange <- range(year(egg$datetime)) # min & max of all years
+allyears <- seq(from = yearrange[1], to = yearrange[2], by = 1) # year range, includes all missing years some of which may be absent in dataset
 
 eggSeason <- data.frame("DJF" = rep(NA, length(allyears)),
                         "MAM" = rep(NA, length(allyears)),
                         "JJA" = rep(NA, length(allyears)),
                         "SON" = rep(NA, length(allyears)),
                         row.names = allyears) #blank dataframe
-larvalSeason <- data.frame("DJF" = rep(NA, length(allyears)),
-                        "MAM" = rep(NA, length(allyears)),
-                        "JJA" = rep(NA, length(allyears)),
-                        "SON" = rep(NA, length(allyears)),
-                        row.names = allyears)
+larvalSeason <- eggSeason #duplicate for larvae
+
+eggMonth <- data.frame("Dec" = rep(NA, length(allyears)),
+                       "Jan" = rep(NA, length(allyears)),
+                       "Feb" = rep(NA, length(allyears)),
+                       "Mar" = rep(NA, length(allyears)),
+                       "Apr" = rep(NA, length(allyears)),
+                       "May" = rep(NA, length(allyears)),
+                       row.names = allyears) #blank dataframe
+larvalMonth <- eggMonth
 
 # need to populate
 # DJF = average of subset of egg$Eggs10m2 where subset is
@@ -173,41 +178,104 @@ larvalSeason <- data.frame("DJF" = rep(NA, length(allyears)),
 #  JJA: year = rowyear AND month = june or july or august
 #  SON sept oct nov
 #  
+#6.2 december to next year####
 #  To get around the december problem i need to create an index column which i can then use to easily subset the data
 #  can then just use aggregate: aggregate(Eggs10m2 ~ year + season, egg, mean)
 #  i need december's yearseason to be the next year.
-#  So just change all december values to the following year? Simply add 1 to year value for december months?!
+#  So just change all december values to the following year: Simply add 1 to year value for december months
 egg[egg$month == 12,"year"] <- egg[egg$month == 12,"year"] + 1
 # only affects year column doesn't mess with datetime
 larvae[larvae$month == 12,"year"] <- larvae[larvae$month == 12,"year"] + 1
-# create season lookup table to populate final columns
+
+#6.3 lookup table####
+# create lookup table to populate season bins columns
 seasons <- data.frame("month" = c(12, 1:11), "season" = c(rep("PreWinter",3), rep("Spring", 3), rep("Summer", 3), rep("Autumn", 3)))
 egg$season <- seasons$season[match(egg$month,seasons$month)]
 larvae$season <- seasons$season[match(larvae$month,seasons$month)]
 
+#6.4 compute annual season bin averages####
 eggMeans <- aggregate(Eggs10m2 ~ year + season, egg, mean) # new df, means by year and season
 eggMeans$season <- factor(eggMeans$season, levels = c("PreWinter", "Spring", "Summer", "Autumn")) # reorder season factors
 eggMeans <- eggMeans[with(eggMeans, order(year, season)),] # reorder df by year then season
 eggMeans <- spread(eggMeans, key = season, value = Eggs10m2) # spread AKA cast kindaAKA reshape df to wide format
 
-larvalMeans <- aggregate(Larvae10m2 ~ year + season, larvae, mean) # new df, means by year and season
-larvalMeans$season <- factor(larvalMeans$season, levels = c("PreWinter", "Spring", "Summer", "Autumn")) # reorder season factors
-larvalMeans <- larvalMeans[with(larvalMeans, order(year, season)),] # reorder df by year then season
-larvalMeans <- spread(larvalMeans, key = season, value = Larvae10m2) # spread AKA cast kindaAKA reshape df to wide format
+larvalMeans <- aggregate(Larvae10m2 ~ year + season, larvae, mean)
+larvalMeans$season <- factor(larvalMeans$season, levels = c("PreWinter", "Spring", "Summer", "Autumn"))
+larvalMeans <- larvalMeans[with(larvalMeans, order(year, season)),]
+larvalMeans <- spread(larvalMeans, key = season, value = Larvae10m2)
 
-# similar exercise to average from December to May
+#6.5 compute peak (6mo) averages####
 peakseasons <- data.frame("month" = c(12, 1:11), "season" = c(rep("Peak",6), rep("NonPeak", 6)))
 egg$peakseason <- peakseasons$season[match(egg$month,peakseasons$month)]
 larvae$peakseason <- peakseasons$season[match(larvae$month,peakseasons$month)]
 
 eggMeans2 <- aggregate(Eggs10m2 ~ year + peakseason, egg, mean) # new df, means by year and season
 eggMeans2 <- spread(eggMeans2, key = peakseason, value = Eggs10m2) # spread AKA cast kindaAKA reshape df to wide format
-larvalMeans2 <- aggregate(Larvae10m2 ~ year + peakseason, larvae, mean) # new df, means by year and season
-larvalMeans2 <- spread(larvalMeans2, key = peakseason, value = Larvae10m2) # spread AKA cast kindaAKA reshape df to wide format
+larvalMeans2 <- aggregate(Larvae10m2 ~ year + peakseason, larvae, mean)
+larvalMeans2 <- spread(larvalMeans2, key = peakseason, value = Larvae10m2)
 
 eggMeans <- cbind(eggMeans, eggMeans2[,2:3]) #bind peak/nonpeak to 4 seasons
 larvalMeans <- cbind(larvalMeans, larvalMeans2[,2:3])
 
+#6.6 compute monthly bin averages####
+eggMeans3 <- aggregate(Eggs10m2 ~ year + month, egg, mean) # new df, means by year and season
+eggMeans3 <- spread(eggMeans3, key = month, value = Eggs10m2) # spread AKA cast kindaAKA reshape df to wide format
+larvalMeans3 <- aggregate(Larvae10m2 ~ year + month, larvae, mean)
+larvalMeans3 <- spread(larvalMeans3, key = month, value = Larvae10m2)
+
+#column names months
+jfmam <- c("Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec")
+colnames(eggMeans3)[2:13] <- jfmam
+colnames(larvalMeans3)[2:13] <- jfmam
+# move dec to before jan
+eggMeans3 <- eggMeans3[,c(1, 13, 2:12)]
+larvalMeans3 <- larvalMeans3[,c(1, 13, 2:12)]
+
+eggMeans <- cbind(eggMeans, eggMeans3[,2:13]) #bind peak/nonpeak to 4 seasons
+larvalMeans <- cbind(larvalMeans, larvalMeans3[,2:13])
+
+
+
+#7 month2month change factor?####
+# jan divided by dec for each month til may, n=5
+# feb divided by dec ditto, n=4
+# how many do I actually need to do? How many originally missing which I've imputed currently with season ranges?
+# 11 jan 8 april
+# How many of these newly imputed values were from peak season (Feb/Mar not touching Jan or Apr)?
+# 1957 no jan now poulated, Sol jan & feb cruises, ERDDAP dec:may
+# 1967 no jan or apr, now jan from Dec, figure v low
+# 1968 no april but 2 april cruises, populated but figure low
+# 1970 nothing now preW from Dec figure normal
+# 1971/3/4 nothing nothing
+# 1975 no apr now populated v high. Cruise from Jan to 31 mar & all May. Poster child for current technique? May values should average down March ones; Dec & Feb should average out for Jan.
+# 1976 nothing now PreW from dec.
+# 1977 nothing nothing
+# 1980 nothing now both, makes no sense per Sol's plot as apparently no cruises from aug 78 til dec 80 (counts as 81). ERDDAP values exist from Feb to Jun suggesting a cruise.
+# 1982 no jan now populated; again SOl plot says no cruises but data from Jan to Apr
+# 1983 nothing now both; Sol plot says mini cruises in Jan Mar Apr May, ERDDAP has Jan:Apr data
+# 1985 nothing/both; Sol cruise Feb-Mar, ERDDAP jan:may
+# 1986 no spring; Sol feb mar & may but no touch apr, ERDDAP jan feb may
+# 1987 no jan; Sol mar & apr/may, ERDDAP jan:may
+# 1990 no jan, sol concurs, now 0, ERDDAP 1 zero val in Jan. Check source data for that zero. How many points? Fair to discard? Better to have NA than 0?
+tmp90 <- subset(x = egg, year == 1990 & month == 1) # 99 hauls, well enough
+# 1991 no apr now present, Sol feb/mar cruise, ERDDAP mar:apr
+# 2006 no jan now present, Sol Feb cruise, ERDDAP feb, very low figure
+# 2009 no apr now present, Sol mar cruise, ERDDAP Mar:May
+tmp09 <- subset(x = egg, year == 2009 & month >= 3 & month <= 5) # n=402
+# 2016 nothing now spring, Sol all jan & all apr, ERDDAP mar:apr; preW cruise not yet available
+# 2017 per 2016
+
+# Season bin technique more defensible than touching technique:
+## touching is missing data in years where cruises were done in key months e.g. 1968, 1980
+## risk of only high feb data populating touchingJan (or Mar for TouchApr) balanced against benefit of averaging data from e.g. dec AND feb in a jan-absent year instead of nothing (1975)
+## ERDDAP has no single instance of a high Feb value populating TouchingJan when no Jan or Jan+Dec values aren't also present
+## 1 instance of high March but no April but balanced by presence of also-previously-ignored May data (1975)
+## THEREFORE: postulated risks not realised in practice. New technique improves and grows dataset.
+## THEREFORE: do not attempt to impute missing seasons using another technique.
+
+#8 writecsv####
 setwd(paste0(machine, '/simon/Dropbox/Farallon Institute/Data & Analysis/Biological/Anchovy & Sardine Biomass/CalCOFI egg & larval trawl/')) #set wd for export
 write_csv(x = eggMeans, path = "ERDDAP_CalCOFI_EggMeans.csv", na = "") # export
 write_csv(x = larvalMeans, path = "ERDDAP_CalCOFI_LarvalMeans.csv", na = "")
+
+#END####

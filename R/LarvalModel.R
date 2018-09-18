@@ -2,21 +2,26 @@
 ## SD started 19/06/2018
 ## Latest edit 29/08/2018
 
+rm(list = ls()) # remove everything if you crashed before
+
 #Install packages####
 # install.packages("devtools")
 library(devtools)
-install_github("SimonDedman/gbm.auto") # update gbm.auto to latest
+#install_github("SimonDedman/gbm.auto") # update gbm.auto to latest
 library(gbm.auto)
 
 # which machine are you on?
-machine <- "/home" # linux desktop (& laptop?)
+#machine <- "/home" # linux desktop (& laptop?)
 machine <- "C:/Users"# windows laptop
 
 ##1 Import, clean, set variables####
 # read in csv created from Data Structure Template excel
-Annual <- read.csv(paste0(machine, '/simon/Dropbox/Farallon Institute/Data & Analysis/Data Structure Template 2018.08.29.csv'),
+Annual <- read.csv(paste0(machine, '/simon/Dropbox/Farallon Institute/Data & Analysis/Data Structure Template 2018.09.05.csv'),
                    na.strings = "")
 # Annual <- Annual[5:nrow(Annual),] # Trim first 4 rows. Now done beforehand so data columns aren't imported as factors
+# clip off dud rows year 2018 & beyond if present
+Annual <- Annual[1:(match(2017, Annual$Year)),]
+
 
 colnames(Annual)
 # for reference:
@@ -76,10 +81,10 @@ AdultExpvars <- c("A_Tot_B_Y.1", "MEI_PreW", "MEI_Spring", "NPGO_PreW",
                   "ChlA_all", "ChlA_nearshore","Sml_P", "Euphausiids",
                   "Hake", "C_SeaLion","Albacore","Halibut","C_Murre",
                   "SoShWa","HBW","Hsquid", "FishLand","MktSqdCatch",
-                  "Catch_Sard","Biom_Sard_Alec", "Msquid_CPUE", "Krill_CPUE")
+                  "Catch_Sard","Biom_Sard_Alec", "Msquid_CPUE", "Krill_CPUE", "Krill_mgCm2")
 
-LarvalResvar <- "Anch_Larvae"
-LarvalExpvars <- c("Anch_Egg", "A_Tot_B", "MEI_PreW", "MEI_Spring", "NPGO_PreW",
+LarvalResvar <- "Anch_Larvae_Peak"
+LarvalExpvars <- c("Anch_Egg_Peak", "A_Tot_B", "MEI_PreW", "MEI_Spring", "NPGO_PreW",
                   "NPGO_Spring","NPC_Str_Lat", "SeaLevLA_PreW","SeaLevLA_Spring",
                   "Ek_PreW_46025","Ek_Spr_46025", "Ek_PreW_46011","Ek_Spr_46011",
                   "Ek_PreW_46012", "Ek_Spr_46012","FourDCP_PreW_46025","FourDCP_Spr_46025",
@@ -91,9 +96,9 @@ LarvalExpvars <- c("Anch_Egg", "A_Tot_B", "MEI_PreW", "MEI_Spring", "NPGO_PreW",
                   "PDO_Spring","LaJ_T_PreW","LaJ_T_Spring","TempAtDep_all",
                   "TempAtDep_nearshore", "SalAtDep_all", "SalAtDep_nearshore",
                   "O2AtDep_all", "O2AtDep_nearshore", "ChlA_all", "ChlA_nearshore","Sml_P", "Lrg_P",
-                  "Hake", "Jmac", "Cmac", "Catch_Sard","Biom_Sard_Alec", "Krill_CPUE")
+                  "Hake", "Jmac", "Cmac", "Catch_Sard","Biom_Sard_Alec", "Krill_CPUE", "Krill_mgCm2")
 
-EggResvar <- "Anch_Egg"
+EggResvar <- "Anch_Egg_Peak"
 EggExpvars <- c("A_Tot_B", "MEI_PreW", "MEI_Spring", "NPGO_PreW",
                    "NPGO_Spring","NPC_Str_Lat", "SeaLevLA_PreW","SeaLevLA_Spring",
                    "Ek_PreW_46025","Ek_Spr_46025", "Ek_PreW_46011","Ek_Spr_46011",
@@ -106,7 +111,7 @@ EggExpvars <- c("A_Tot_B", "MEI_PreW", "MEI_Spring", "NPGO_PreW",
                    "PDO_Spring","LaJ_T_PreW","LaJ_T_Spring","TempAtDep_all",
                    "TempAtDep_nearshore", "SalAtDep_all", "SalAtDep_nearshore",
                    "O2AtDep_all", "O2AtDep_nearshore", "Lrg_P", "Hake", "Jmac",
-                   "Cmac", "Catch_Sard","Biom_Sard_Alec", "Krill_CPUE")
+                   "Cmac", "Catch_Sard","Biom_Sard_Alec", "Krill_CPUE", "Krill_mgCm2")
 
 AdultResvarCol <- match(AdultResvar, names(Annual))
 AdultExpvarsCols <- match(AdultExpvars, names(Annual))
@@ -130,15 +135,45 @@ setwd("Adults")
 gbm.auto(expvar = AdultExpvarsCols,
          resvar = AdultResvarCol,
          samples = AdultSamples,
-         lr = c(0.001),
+         lr = c(0.000001),
          ZI = F,
          fam1 = "gaussian",
          savegbm = FALSE,
          BnW = FALSE,
-         #simp = T,
-         simp = F,
+         simp = T,
          multiplot = F,
          varint = F)
+#!AdultRunNote!####
+#Can't get adults to run and produce deviance curve plots i.e. model can't differentiate causes of changes
+#remove redundant variables
+
+AdultExpvars <- c("A_Tot_B_Y.1", "MEI_PreW", "MEI_Spring", "NPGO_PreW",
+                  "NPGO_Spring","NPC_Str_Lat", "SeaLevLA_PreW","SeaLevLA_Spring",
+                  "Ek_PreW_46025","Ek_Spr_46025", "Ek_PreW_46011","Ek_Spr_46011",
+                  "Ek_PreW_46012", "Ek_Spr_46012","FourDCP_PreW_46025","FourDCP_Spr_46025",
+                  "FourDCP_PreW_46011","FourDCP_Spr_46011","FourDCP_PreW_46012",
+                  "FourDCP_Spr_46012","CrsWnd_PreW_46025","CrsWnd_Spr_46025",
+                  "CrsWnd_PreW_46011","CrsWnd_Spr_46011","CrsWnd_PreW_46012",
+                  "CrsWnd_Spr_46012","BUI33N_PreW","BUI33N_Spring","Stability_all",
+                  "Stability_nearshore", "PDO_PreW",
+                  "PDO_Spring","LaJ_T_PreW","LaJ_T_Spring","TempAtDep_all",
+                  "TempAtDep_nearshore", "SalAtDep_all", "SalAtDep_nearshore",
+                  "O2AtDep_all", "O2AtDep_nearshore",
+                  "ChlA_all", "ChlA_nearshore","Sml_P", "Euphausiids",
+                  "Hake", "C_SeaLion","Albacore","Halibut","C_Murre",
+                  "SoShWa","HBW","Hsquid", "FishLand","MktSqdCatch",
+                  "Catch_Sard","Biom_Sard_Alec", "Msquid_CPUE", "Krill_CPUE", "Krill_mgCm2")
+AdultExpvars <- c("A_Tot_B_Y.1", "MEI_Spring","NPGO_Spring","NPC_Str_Lat",
+                  "SeaLevLA_Spring", "Ek_Spr_46025","FourDCP_Spr_46025",
+                  "CrsWnd_Spr_46025","BUI33N_Spring",
+                  "Stability_nearshore", "TempAtDep_nearshore", "SalAtDep_nearshore",
+                  "O2AtDep_nearshore","ChlA_nearshore","Sml_P", "Euphausiids",
+                  "Hake", "C_SeaLion","Albacore","Halibut","C_Murre",
+                  "SoShWa","HBW","Hsquid", "FishLand","MktSqdCatch",
+                  "Biom_Sard_Alec","Krill_Biom", "Msquid_CPUE", "Krill_CPUE")
+AdultExpvars <- c("A_Tot_B_Y.1", "NPGO_Spring","Sml_P","C_SeaLion","Catch_Sard","Biom_Sard_Alec", "Krill_mgCm2")
+AdultExpvarsCols <- match(AdultExpvars, names(Annual))
+
 
 setwd("../")
 
@@ -151,7 +186,7 @@ setwd("Larvae")
 gbm.auto(expvar = LarvalExpvarsCols,
          resvar = LarvalResvar,
          samples = LarvalSamples,
-         lr = c(0.0001),
+         lr = c(0.00001),
          bf = 0.8,
          ZI = F,
          fam1 = "gaussian",
@@ -164,6 +199,11 @@ gbm.auto(expvar = LarvalExpvarsCols,
 # 2018.08.29 dataset size is too small or subsampling rate is too large: nTrain*bag.fraction <= n.minobsinnode
 # changed bf to 0.8
 # Error: $ operator is invalid for atomic vectors
+
+LarvalExpvars <- c("Anch_Egg_Peak", "A_Tot_B", "O2AtDep_all","Biom_Sard_Alec")
+LarvalExpvarsCols <- match(LarvalExpvars, names(Annual))
+#from here####
+# sort out peak resvar with peak expvars
 
 setwd("../")
 #2.3 Eggs####
@@ -444,6 +484,8 @@ pairs(Annual[c(92,94:96)], #sardine
       main = "pair plots of variables")
 # alec & andre 0.98 use 1 Alec
 # Alec vs catch 0.62 use Alec or both? Alec.
+
+#DO KRILL PAIRPLOTS####
 
 #3.2 lm plots####
 source(paste0(machine, '/simon/Dropbox/Galway/Analysis/R/My Misc Scripts/LinearModelPlot.R')) # load my lm plotting function
