@@ -12,7 +12,7 @@ library(tidyverse)
 library(lubridate)
 
 setwd(paste0(machine, '/simon/Dropbox/Farallon Institute/Data & Analysis/Environmental'))
-enviros <- read_csv('calcofi_timeseries_TSC_6regions_Jan-Apr_1949-2017 inc O2.csv') #read data
+enviros <- read_csv('calcofi_timeseries_TSC_6regions_Jan-Apr_1949-2017 inc O2.csv', na = "NaN") #read data
 envalnames <- c("Temp", "Sal", "ChlA", "O2", "Stab") # shorter names no spaces
 colnames(enviros)[4:8] <- envalnames # assign names to cols
 regNames <- c("CentCal", "Nearsh", "NCoast", "Offsh", "South", "Transition") #shorter region names
@@ -27,4 +27,5 @@ for (i in envalnames){
   colnames(SpreadData)[colstmp] <- nametmp # name columns
 }
 
-write_csv(SpreadData, "CalCOFI_Env_SpreadRegions.csv")
+SpreadData <- SpreadData[-c(1,2),] # remove years 1949 & 1950
+write_csv(SpreadData, "CalCOFI_Env_SpreadRegions.csv", na = "")
