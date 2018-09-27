@@ -2263,17 +2263,82 @@ gbm.loop(expvar = EggExpvarsCols,
          varint = F,
          alerts = F)
 
-#8 expvar lags####
-# other expvar lags: how to choose? Could be a massive undertaking?
-# Or include ALL y0 and y-1 and see if any y-1 outperform y0 and if so
-# discard y0 and try y-2 ad infinitum
-
-#9 logs####
-
-#10 subsets & thresholds####
+#8 subsets & thresholds####
 # some way to test the 2-stage rocket concept: is there a difference in getting
 # from B1:B2 vs B2:B3? Or is a (sequential) X% increase (within the min-max
 # range) a constant product of the same underlying forcing factors? Bill thinks
 # it's reproductive success in prewinter and recruitment success in spring/summer.
+#
+# Sardine, choose best testable threshold, based on all 3 resvars (how to compare catch sard w/ biom sard alec?)
+# Ditto hake? Why not?
+# Ditto anchovy, lag y-1
+# =18 more runs (2 subsets of 3 expvars * 3 resvars)
+#8.1 sardine####
+# Adults: biom alec 0line (swaps from positive to negative preference, big spike) between:
+# min: 77521 & 85264. Av: 116232 & 123975. Max:  131717 & 139459
+mean(c(116232, 123975)) # 120103.5, say 120,000
+# Larvae: irrelevant, 0.5%INF
+# Eggs: catch sard
+# min: 6029. Av: 7536 & 9043. Max: 15071 & 16578
+mean(c(7536, 9043)) # 8289 say 8300
+# Both
+# Do adult & egg separately given different variables
+AdultSamplesHiSard <- subset(AdultSamples, Biom_Sard_Alec > 120000)
+AdultSamplesLoSard <- subset(AdultSamples, Biom_Sard_Alec <= 120000)
+
+EggSamplesHiSard <- subset(EggSamples, Catch_Sard > 8300)
+EggSamplesLoSard <- subset(EggSamples, Catch_Sard <= 8300)
+
+#from here####
+#copy BRT/loop text from prev section, populate here, run in next folder
+
+#8.2 hake####
+# Adults irrelvant
+# Larvae, average only
+mean(c(1525397.306, 1542542.087)) # 1533970
+# Egg
+mean(c(1456818.182, 1473962.963)) # 1465391
+# Both
+mean(c(1533970, 1465391)) # 1499681
+# round up to a big fat juicy 1500000
+# Do both E & L
+LarvalSamplesHiSard <- subset(LarvalSamples, Hake > 1500000)
+LarvalSamplesLoSard <- subset(LarvalSamples, Hake <= 1500000)
+
+EggSamplesHiSard <- subset(EggSamples, Hake > 1500000)
+EggSamplesLoSard <- subset(EggSamples, Hake <= 1500000)
 
 
+#8.3 Anchovy B y-1####
+# Adults, average only
+mean(c(436052.4819, 456461.9649)) # 446257.2
+# Larvae
+mean(c(395233.5157, 415642.9988)) # 405438.3
+# Egg
+mean(c(374824.0326, 395233.5157)) # 385028.8
+# Both
+mean(c(446257.2, 405438.3, 385028.8)) # 412241.4 say 410000
+# should take the mean of all 3? Notable that threshold is higher for larger size classes?
+# Min threshold looks oddly similar though?
+mean(c(476871.448, 497280.9311)) # 487076.2
+mean(c(395233.5157, 415642.9988)) # 405438.3
+mean(c(374824.0326, 395233.5157)) # 385028.8
+mean(c(487076.2, 405438.3, 385028.8)) # 425847.8
+# maybe not!
+# adults only? Maybe eggs as well.
+AdultSamplesHiAnch <- subset(AdultSamples, A_Tot_B_lag_1 > 410000)
+AdultSamplesLoAnch <- subset(AdultSamples, A_Tot_B_lag_1 <= 410000)
+
+EggSamplesHiAnch <- subset(EggSamples, A_Tot_B_lag_1 > 410000)
+EggSamplesLoAnch <- subset(EggSamples, A_Tot_B_lag_1 <= 410000)
+
+
+
+
+#expvar lags####
+# other expvar lags: how to choose? Could be a massive undertaking?
+# Or include ALL y0 and y-1 and see if any y-1 outperform y0 and if so
+# discard y0 and try y-2 ad infinitum
+
+
+#logs####
