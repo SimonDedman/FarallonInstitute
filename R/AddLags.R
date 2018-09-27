@@ -1,4 +1,4 @@
-# Add n rows years?) of lags to data series, appends cols to existing dataframe,
+# Add n rows (years?) of lags to data series, appends cols to existing dataframe,
 # returns df to be designated as a named object
 ## Simon Dedman 2018.09.25
 
