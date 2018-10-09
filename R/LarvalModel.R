@@ -7,7 +7,7 @@ rm(list = ls()) # remove everything if you crashed before
 #Install packages####
 # install.packages("devtools")
 library(devtools)
-#install_github("SimonDedman/gbm.auto") # update gbm.auto to latest
+install_github("SimonDedman/gbm.auto") # update gbm.auto to latest
 library(gbm.auto)
 
 # which machine are you on?
@@ -2320,9 +2320,6 @@ gbm.loop(expvar = EggExpvarsCols,
 
 # sablefish: pairplot against... everything. Done.
 
-#TODO####
-#Finalise predator index and use that, inc bluefin
-
 #8 subsets & thresholds####
 setwd(paste0(machine, "/simon/Dropbox/Farallon Institute/Data & Analysis/ModelOutputs/"))
 dir.create("2018.10.04_Subsets_10Loop")
@@ -2948,7 +2945,7 @@ gbm.loop(expvar = fulltimeseries,
          multiplot = F,
          varint = T,
          alerts = F)
-
+#adults 1951:80####
 setwd(paste0(machine, "/simon/Dropbox/Farallon Institute/Data & Analysis/ModelOutputs/2018.10.04_Subsets_10Loop/BMe"))
 gbm.bfcheck(samples = AdultSamplesBMe, resvar = AdultResvar, ZI = F)
 # [1] "  binary bag fraction must be at least 0.955"
@@ -2965,7 +2962,7 @@ gbm.loop(expvar = BMe,
          multiplot = F,
          varint = T,
          alerts = F) #won't run
-
+#adults 1981:17####
 setwd(paste0(machine, "/simon/Dropbox/Farallon Institute/Data & Analysis/ModelOutputs/2018.10.04_Subsets_10Loop/AMe"))
 gbm.bfcheck(samples = AdultSamplesAMe, resvar = AdultResvar, ZI = F)
 # [1] "  binary bag fraction must be at least 0.6"
@@ -2985,21 +2982,19 @@ gbm.loop(expvar = AMe,
 
 
 #9 Expvar Lags####
-# Sol & Bill good vars tried (w/ Adults only):
-# biomassY-1 (got), upwelling spring Y-2, sealevel spring y-1. 70% variance?
-
 library(gbm.auto)
 #machine <- "/home" # linux desktop (& laptop?)
 machine <- "C:/Users"# windows laptop
 Annual <- read.csv(paste0(machine, '/simon/Dropbox/Farallon Institute/Data & Analysis/Data Structure Template 2018.10.04.csv'), na.strings = "")
 Annual <- Annual[1:(match(2017, Annual$Year)),]
+source(paste0(machine, "/simon/Dropbox/Farallon Institute/FarallonInstitute/R/AddLags.R"))
 
+#Sol & Bill3####
+# good vars tried (w/ Adults only):
+# biomassY-1 (got), upwelling spring Y-2, sealevel spring y-1. 70% variance? 65-69ish
 setwd(paste0(machine, "/simon/Dropbox/Farallon Institute/Data & Analysis/ModelOutputs/"))
 dir.create("2018.10.05_BillSolLags_10Loop")
 setwd(paste0(machine, "/simon/Dropbox/Farallon Institute/Data & Analysis/ModelOutputs/2018.10.05_BillSolLags_10Loop"))
-
-source(paste0(machine, "/simon/Dropbox/Farallon Institute/FarallonInstitute/R/AddLags.R"))
-
 Annual <- AddLags(x = Annual,
                   lagYears = 1:2,
                   toLag = c("A_Tot_B",
@@ -3007,14 +3002,11 @@ Annual <- AddLags(x = Annual,
                             "Anch_Egg_Peak",
                             "BUI33N_Spring",
                             "SeaLevLA_PreW"))
-
 AdultResvar <- "A_Tot_B"
-#AdultResvarCol <- match(AdultResvar, names(Annual))
 AdultSamples <- Annual[-which(is.na(Annual[AdultResvar])),] # remove NA rows
 AdultExpvars <- c("A_Tot_B_lag_1",
                   "BUI33N_Spring_lag_2",
                   "SeaLevLA_PreW_lag_1")
-#AdultExpvarsCols <- match(AdultExpvars, names(Annual))
 gbm.bfcheck(samples = AdultSamples, resvar = AdultResvar, ZI = F)
 # [1] "Gaussian bag fraction must be at least 0.368" good
 gbm.auto(expvar = AdultExpvars,
@@ -3031,15 +3023,153 @@ gbm.auto(expvar = AdultExpvars,
          alerts = F) #FAILS
 # model cv score: 55.63%: not great.
 
-## other expvar lags:
+#all expvar lags####
+setwd(paste0(machine, "/simon/Dropbox/Farallon Institute/Data & Analysis/ModelOutputs"))
+#dir.create("2018.10.08_AllExpvarLags")
+setwd(paste0(machine, "/simon/Dropbox/Farallon Institute/Data & Analysis/ModelOutputs/2018.10.08_AllExpvarLags"))
 # include ALL y0 and y-1 and see if any y-1 outperform y0 and if so
-# discard y0 and try y-2 ad infinitum
-# easy way:
-EggExpvars <- c("A_Tot_B_lag_1", "etc")
-Annual <- AddLags(x = Annual, lagYears = 1:2, toLag = EggExpvars)
-EggExpvarsL12 <- c(EggExpvars,
-                   paste0(EggExpvars, "_lag_1"),
-                   paste0(EggExpvars, "_lag_2"))
-gbm.auto()
-#logs####
+# discard y0 and try y-2 ad infinitum. Easy way:
+
+#adults####
+AdultResvar <- "A_Tot_B"
+AdultSamples <- Annual[-which(is.na(Annual[AdultResvar])),] # remove NA rows
+AdultExpvars <- c("NPGO_Spring",
+                  "NPC_Str_Lat", #useless & too few values, kills model runs
+                  "SeaLevLA_PreW", #useless
+                  "BUI33N_Spring",
+                  "Stability_all", #changed from South 2018.10.01
+                  "Temp_NCoast", #changed from South 2018.10.01
+                  "Sal_South", #useless
+                  "O2_Offsh", #changed from All 2018.10.01
+                  "ChlA_Nearsh", #changed from All 2018.10.01
+                  "Sml_P",
+                  "Euphausiids",
+                  "C_Albacore", #useless & too few values, kills model runs
+                  "C_Sablefish",
+                  "C_ChinSal", #useless in loop w/ consumption
+                  "C_Halibut", #useless
+                  "C_SoShWa", #useless
+                  "C_HBW", #useless & too few values, kills model runs
+                  "C_Hsquid", #useless & too few values, kills model runs
+                  "C_SeaLion",
+                  "C_Murre", #useless in loop w/ consumption
+                  "FishLand", #useless in loop w/ consumption
+                  "Biom_Sard_Alec",
+                  "Hake_Biom", #useless
+                  "Msquid_Biom",
+                  "Rockfish_Biom",
+                  "Krill_mgCm2",
+                  "Consumption")  # consumption added, remove components?
+AdultSamplesLag <- AddLags(x = AdultSamples, lagYears = 1:2, toLag = AdultExpvars)
+AdultExpvarsLag12 <- c(AdultExpvars,
+                       paste0(AdultExpvars, "_lag_1"),
+                       paste0(AdultExpvars, "_lag_2"))
+
+gbm.bfcheck(samples = AdultSamplesLag, resvar = AdultResvar, ZI = F)
+# [1] "  binary bag fraction must be at least 0.368"
+# [1] "Gaussian bag fraction must be at least 0.368" good
+gbm.loop(expvar = AdultExpvarsLag12,
+         resvar = AdultResvar,
+         samples = AdultSamplesLag,
+         lr = 0.0000001,
+         bf = 0.5,
+         ZI = F,
+         savegbm = FALSE,
+         BnW = FALSE,
+         simp = F,
+         multiplot = F,
+         varint = T,
+         alerts = F)
+
+#larvae####
+#FROMHERE####
+LarvalResvar <- "Anch_Larvae_Peak"
+LarvalResvarCol <- match(LarvalResvar, names(Annual))
+LarvalSamples <- Annual[-which(is.na(Annual[LarvalResvar])),]
+LarvalSamplesHiHake <- subset(LarvalSamples, Hake > 1500000)
+LarvalSamplesLoHake <- subset(LarvalSamples, Hake <= 1500000)
+LarvalExpvars <- c("A_Tot_B_lag_1",
+                   "NPGO_Spring",
+                   "NPC_Str_Lat",
+                   "SeaLevSF_Spring",
+                   "BUI33N_Spring",
+                   "Stab_South",
+                   "Temp_South",
+                   "Sal_South",
+                   "O2AtDep_all",
+                   "ChlA_all",
+                   "Sml_P", "Lrg_P",
+                   "Hake", "Jmac", "Cmac",
+                   "Catch_Sard",
+                   "Msquid_Biom",
+                   "Rockfish_Biom",
+                   "Krill_mgCm2",
+                   "Anch_Larvae_Peak_lag_1",
+                   "Anch_Larvae_Peak_lag_2",
+                   "Anch_Larvae_Peak_lag_3",
+                   "Anch_Larvae_Peak_lag_4")
+LarvalExpvarsCols <- match(LarvalExpvars, names(Annual))
+setwd(paste0(machine, "/simon/Dropbox/Farallon Institute/Data & Analysis/ModelOutputs/2018.10.04_Subsets_10Loop/"))
+dir.create("HiHake")
+dir.create("LoHake")
+setwd(paste0(machine, "/simon/Dropbox/Farallon Institute/Data & Analysis/ModelOutputs/2018.10.04_Subsets_10Loop/HiHake"))
+gbm.bfcheck(samples = LarvalSamplesHiHake, resvar = LarvalResvar, ZI = F)
+# [1] "  binary bag fraction must be at least 1.235"
+# [1] "Gaussian bag fraction must be at least 1.235" #that bodes badly...
+gbm.loop(expvar = LarvalExpvarsCols,
+         resvar = LarvalResvar,
+         samples = LarvalSamplesHiHake,
+         lr = c(0.00000001),
+         bf = 0.95, #0.95 fails
+         ZI = F,
+         savegbm = FALSE,
+         BnW = FALSE,
+         simp = F,
+         multiplot = F,
+         varint = F) # fails
+
+#eggs####
+EggResvar <- "Anch_Egg_Peak"
+EggResvarCol <- match(EggResvar, names(Annual))
+EggSamples <- Annual[-which(is.na(Annual[EggResvar])),]
+EggExpvars <- c("A_Tot_B_lag_1",
+                "NPGO_Spring",
+                "NPC_Str_Lat", #0inf%, frequently crashes runs as only has missing values.
+                "SeaLevSF_PreW",
+                "BUI33N_Spring",
+                "Stab_South",
+                "Temp_South",
+                "Sal_South",
+                "O2AtDep_all",
+                "Lrg_P",
+                "Hake", "Jmac", "Cmac",
+                "Catch_Sard",
+                "Msquid_Biom",
+                "Rockfish_Biom",
+                "Krill_mgCm2",
+                "Anch_Egg_Peak_lag_1",
+                "Anch_Egg_Peak_lag_2",
+                "Anch_Egg_Peak_lag_3",
+                "Anch_Egg_Peak_lag_4")
+gbm.bfcheck(samples = EggSamplesHiAnch, resvar = EggResvar, ZI = F)
+# [1] "  binary bag fraction must be at least 0.955"
+# [1] "Gaussian bag fraction must be at least 0.955"
+setwd(paste0(machine, "/simon/Dropbox/Farallon Institute/Data & Analysis/ModelOutputs/2018.10.04_Subsets_10Loop/HiAnch"))
+gbm.loop(expvar = EggExpvarsCols,
+         resvar = EggResvar,
+         samples = EggSamplesHiAnch,
+         lr = c(0.000000001),
+         bf = 0.999,
+         ZI = F,
+         savegbm = FALSE,
+         BnW = FALSE,
+         simp = F,
+         multiplot = F,
+         varint = T,
+         alerts = F) #can't get it to run.
+#10 logs####
+#
+#
+##TODO####
+#Finalise predator index and use that, inc bluefin
 

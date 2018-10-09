@@ -5,7 +5,7 @@
 AddLags <- function(x, # dataframe with columns you want to lag within it
                     lagYears = 1, # integer or vector of number of years to lag, can be nonsequential
                     toLag){ # single or vector of column names within x to lag 
-  for(n in lagYears){ #start loop trough numbers of years to lag
+  for(n in lagYears){ #start loop through numbers of years to lag
     for (i in toLag){ #loop through variable columns for each lag year
       len <- length(x[,i])-n #length of variable i minus n rows, within x
       tmpcolname <- c(rep(NA, n), x[(1:len), i]) #create vec w/ n NAs @ front then variable minus n rows
