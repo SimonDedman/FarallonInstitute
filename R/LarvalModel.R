@@ -3024,16 +3024,17 @@ gbm.auto(expvar = AdultExpvars,
 # model cv score: 55.63%: not great.
 
 #all expvar lags####
-setwd(paste0(machine, "/simon/Dropbox/Farallon Institute/Data & Analysis/ModelOutputs"))
+#setwd(paste0(machine, "/simon/Dropbox/Farallon Institute/Data & Analysis/ModelOutputs"))
 #dir.create("2018.10.08_AllExpvarLags")
-setwd(paste0(machine, "/simon/Dropbox/Farallon Institute/Data & Analysis/ModelOutputs/2018.10.08_AllExpvarLags"))
+setwd(paste0(machine, "/simon/Dropbox/Farallon Institute/Data & Analysis/ModelOutputs/2018.10.08_AllExpvarLags/Simp"))
 # include ALL y0 and y-1 and see if any y-1 outperform y0 and if so
 # discard y0 and try y-2 ad infinitum. Easy way:
 
 #adults####
 AdultResvar <- "A_Tot_B"
 AdultSamples <- Annual[-which(is.na(Annual[AdultResvar])),] # remove NA rows
-AdultExpvars <- c("NPGO_Spring",
+AdultExpvars <- c("A_Tot_B",
+                  "NPGO_Spring",
                   "NPC_Str_Lat", #useless & too few values, kills model runs
                   "SeaLevLA_PreW", #useless
                   "BUI33N_Spring",
@@ -3064,7 +3065,7 @@ AdultSamplesLag <- AddLags(x = AdultSamples, lagYears = 1:2, toLag = AdultExpvar
 AdultExpvarsLag12 <- c(AdultExpvars,
                        paste0(AdultExpvars, "_lag_1"),
                        paste0(AdultExpvars, "_lag_2"))
-
+AdultExpvarsLag12 <- AdultExpvarsLag12[-1] #remove A_Tot_B as expvar
 gbm.bfcheck(samples = AdultSamplesLag, resvar = AdultResvar, ZI = F)
 # [1] "  binary bag fraction must be at least 0.368"
 # [1] "Gaussian bag fraction must be at least 0.368" good
@@ -3076,20 +3077,15 @@ gbm.loop(expvar = AdultExpvarsLag12,
          ZI = F,
          savegbm = FALSE,
          BnW = FALSE,
-         simp = F,
+         simp = T,
          multiplot = F,
          varint = T,
          alerts = F)
 
 #larvae####
-#FROMHERE####
 LarvalResvar <- "Anch_Larvae_Peak"
-LarvalResvarCol <- match(LarvalResvar, names(Annual))
 LarvalSamples <- Annual[-which(is.na(Annual[LarvalResvar])),]
-LarvalSamplesHiHake <- subset(LarvalSamples, Hake > 1500000)
-LarvalSamplesLoHake <- subset(LarvalSamples, Hake <= 1500000)
-LarvalExpvars <- c("A_Tot_B_lag_1",
-                   "NPGO_Spring",
+LarvalExpvars <- c("NPGO_Spring",
                    "NPC_Str_Lat",
                    "SeaLevSF_Spring",
                    "BUI33N_Spring",
@@ -3104,35 +3100,31 @@ LarvalExpvars <- c("A_Tot_B_lag_1",
                    "Msquid_Biom",
                    "Rockfish_Biom",
                    "Krill_mgCm2",
-                   "Anch_Larvae_Peak_lag_1",
-                   "Anch_Larvae_Peak_lag_2",
-                   "Anch_Larvae_Peak_lag_3",
-                   "Anch_Larvae_Peak_lag_4")
-LarvalExpvarsCols <- match(LarvalExpvars, names(Annual))
-setwd(paste0(machine, "/simon/Dropbox/Farallon Institute/Data & Analysis/ModelOutputs/2018.10.04_Subsets_10Loop/"))
-dir.create("HiHake")
-dir.create("LoHake")
-setwd(paste0(machine, "/simon/Dropbox/Farallon Institute/Data & Analysis/ModelOutputs/2018.10.04_Subsets_10Loop/HiHake"))
-gbm.bfcheck(samples = LarvalSamplesHiHake, resvar = LarvalResvar, ZI = F)
-# [1] "  binary bag fraction must be at least 1.235"
-# [1] "Gaussian bag fraction must be at least 1.235" #that bodes badly...
-gbm.loop(expvar = LarvalExpvarsCols,
+                   "Anch_Larvae_Peak")
+LarvalSamplesLag <- AddLags(x = LarvalSamples, lagYears = 1:2, toLag = LarvalExpvars)
+LarvalExpvarsLag12 <- c(LarvalExpvars,
+                       paste0(LarvalExpvars, "_lag_1"),
+                       paste0(LarvalExpvars, "_lag_2"))
+LarvalExpvarsLag12 <- LarvalExpvarsLag12[-19] #remove larval peak as expvar
+gbm.bfcheck(samples = LarvalSamplesLag, resvar = LarvalResvar, ZI = F)
+# [1] "  binary bag fraction must be at least 0.333"
+# [1] "Gaussian bag fraction must be at least 0.333" 
+gbm.loop(expvar = LarvalExpvarsLag12,
          resvar = LarvalResvar,
-         samples = LarvalSamplesHiHake,
-         lr = c(0.00000001),
-         bf = 0.95, #0.95 fails
+         samples = LarvalSamplesLag,
+         lr = 0.00000001,
+         bf = 0.5, #
          ZI = F,
          savegbm = FALSE,
          BnW = FALSE,
-         simp = F,
+         simp = T,
          multiplot = F,
-         varint = F) # fails
+         varint = F)
 
 #eggs####
 EggResvar <- "Anch_Egg_Peak"
-EggResvarCol <- match(EggResvar, names(Annual))
 EggSamples <- Annual[-which(is.na(Annual[EggResvar])),]
-EggExpvars <- c("A_Tot_B_lag_1",
+EggExpvars <- c("A_Tot_B",
                 "NPGO_Spring",
                 "NPC_Str_Lat", #0inf%, frequently crashes runs as only has missing values.
                 "SeaLevSF_PreW",
@@ -3147,29 +3139,146 @@ EggExpvars <- c("A_Tot_B_lag_1",
                 "Msquid_Biom",
                 "Rockfish_Biom",
                 "Krill_mgCm2",
-                "Anch_Egg_Peak_lag_1",
-                "Anch_Egg_Peak_lag_2",
-                "Anch_Egg_Peak_lag_3",
-                "Anch_Egg_Peak_lag_4")
-gbm.bfcheck(samples = EggSamplesHiAnch, resvar = EggResvar, ZI = F)
-# [1] "  binary bag fraction must be at least 0.955"
-# [1] "Gaussian bag fraction must be at least 0.955"
-setwd(paste0(machine, "/simon/Dropbox/Farallon Institute/Data & Analysis/ModelOutputs/2018.10.04_Subsets_10Loop/HiAnch"))
-gbm.loop(expvar = EggExpvarsCols,
+                "Anch_Egg_Peak")
+EggSamplesLag <- AddLags(x = EggSamples, lagYears = 1:2, toLag = EggExpvars)
+EggExpvarsLag12 <- c(EggExpvars,
+                        paste0(EggExpvars, "_lag_1"),
+                        paste0(EggExpvars, "_lag_2"))
+EggExpvarsLag12 <- EggExpvarsLag12[-18] #remove Anch_Egg_Peak as expvar
+gbm.bfcheck(samples = EggSamplesLag, resvar = EggResvar, ZI = F)
+# [1] "  binary bag fraction must be at least 0.333"
+# [1] "Gaussian bag fraction must be at least 0.333"
+gbm.loop(expvar = EggExpvarsLag12,
          resvar = EggResvar,
-         samples = EggSamplesHiAnch,
-         lr = c(0.000000001),
-         bf = 0.999,
+         samples = EggSamplesLag,
+         lr = 0.000000001,
+         bf = 0.5,
+         ZI = F,
+         savegbm = FALSE,
+         BnW = FALSE,
+         simp = T,
+         multiplot = F,
+         varint = T,
+         alerts = F)
+
+#prune lags####
+setwd(paste0(machine, "/simon/Dropbox/Farallon Institute/Data & Analysis/ModelOutputs/2018.10.08_AllExpvarLags/Pruned"))
+AdultExpvars <- c("A_Tot_B_lag_1",
+                  "NPGO_Spring",
+                  #"NPC_Str_Lat",
+                  "SeaLevLA_PreW_lag_1",
+                  "BUI33N_Spring_lag_2",
+                  "Stability_all", #changed from South 2018.10.01
+                  "Temp_NCoast_lag_2", #changed from South 2018.10.01
+                  "Sal_South_lag_2", #useless
+                  "O2_Offsh_lag_1", #changed from All 2018.10.01
+                  #"ChlA_Nearsh", #changed from All 2018.10.01
+                  "Sml_P",
+                  "Euphausiids_lag_2",
+                  #"C_Albacore", #useless & too few values, kills model runs
+                  "C_Sablefish",
+                  #"C_ChinSal", #useless in loop w/ consumption
+                  #"C_Halibut", #useless
+                  #"C_SoShWa", #useless
+                  #"C_HBW", #useless & too few values, kills model runs
+                  #"C_Hsquid", #useless & too few values, kills model runs
+                  "C_SeaLion",
+                  #"C_Murre", #useless in loop w/ consumption
+                  #"FishLand", #useless in loop w/ consumption
+                  "Biom_Sard_Alec",
+                  "Hake_Biom_lag_2",
+                  "Msquid_Biom",
+                  "Rockfish_Biom_lag_2",
+                  "Krill_mgCm2",
+                  "Consumption_lag_2")
+gbm.loop(expvar = AdultExpvars,
+         resvar = AdultResvar,
+         samples = AdultSamplesLag,
+         lr = 0.0000001,
+         bf = 0.5,
          ZI = F,
          savegbm = FALSE,
          BnW = FALSE,
          simp = F,
          multiplot = F,
          varint = T,
-         alerts = F) #can't get it to run.
+         alerts = F)
+
+
+LarvalExpvars <- c("NPGO_Spring",
+                   #"NPC_Str_Lat",
+                   "SeaLevSF_Spring_lag_2",
+                   "BUI33N_Spring_lag_2",
+                   "Stab_South_lag_2",
+                   "Temp_South_lag_2",
+                   "Sal_South_lag_1",
+                   "O2AtDep_all",
+                   "ChlA_all_lag_2",
+                   "Sml_P",
+                   "Lrg_P",
+                   "Hake",
+                   "Jmac_lag_1",
+                   "Cmac",
+                   "Catch_Sard_lag_2",
+                   "Msquid_Biom",
+                   "Rockfish_Biom",
+                   "Krill_mgCm2",
+                   "Anch_Larvae_Peak_lag_1")
+gbm.loop(expvar = LarvalExpvars,
+         resvar = LarvalResvar,
+         samples = LarvalSamplesLag,
+         lr = 0.00000001,
+         bf = 0.5, #
+         ZI = F,
+         savegbm = FALSE,
+         BnW = FALSE,
+         simp = F,
+         multiplot = F,
+         varint = F)
+
+
+EggExpvars <- c("A_Tot_B_lag_2",
+                "NPGO_Spring",
+                #"NPC_Str_Lat", #0inf%, frequently crashes runs as only has missing values.
+                "SeaLevSF_PreW_lag_1",
+                "BUI33N_Spring_lag_1",
+                "Stab_South",
+                "Temp_South",
+                "Sal_South_lag_1",
+                "O2AtDep_all_lag_1",
+                "Lrg_P",
+                "Hake",
+                "Jmac",
+                "Cmac",
+                "Catch_Sard",
+                "Msquid_Biom_lag_1",
+                "Rockfish_Biom_lag_2",
+                "Krill_mgCm2",
+                "Anch_Egg_Peak_lag_1")
+gbm.loop(expvar = EggExpvars,
+         resvar = EggResvar,
+         samples = EggSamplesLag,
+         lr = 0.000000001,
+         bf = 0.5,
+         ZI = F,
+         savegbm = FALSE,
+         BnW = FALSE,
+         simp = F,
+         multiplot = F,
+         varint = T,
+         alerts = F)
+# egg: 81% sum av inf% fromo sard (3 lags), hake, AtotB (3 lags), Egg (lag1&2)
+# Why am I discarding multiple lag years but keeping (e.g.) NPGO-2 simply cos
+# it's influential at all (av inf 0.08%)
+
+# Compare model performance pruned or not. Why not have simp on?
+# Adults all: 0.6607 pruned: 0.66821 (all are max cv) allsimp: 0.675
+# Larvae all: 0.813 pruned: 0.801 allsimp: 0.805
+# Eggs all: 0.774 pruned: 0.7501 allsimp: 0.761
+
 #10 logs####
-#
-#
+
+
 ##TODO####
-#Finalise predator index and use that, inc bluefin
+#Finalise predator index and use that, NOT inc bluefin
 
