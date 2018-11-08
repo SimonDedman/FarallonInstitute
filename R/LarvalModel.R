@@ -4834,8 +4834,242 @@ gbm.loop(expvar = EggExpvarsLagFullTS,
          cleanup = T)
 beep(8)
 
+#18 lineplots expvar vs anch####
+#adults post57####
+setwd(paste0(machine, "/simon/Dropbox/Farallon Institute/Data & Analysis/ModelOutputs/2018.11.02 ExpvarLines"))
+for(i in AdultExpvarsLag123){
+  png(filename = paste0("SSB vs ", i, ".png"),
+      width = 4*480, height = 4*480, units = "px", pointsize = 80, bg = "white", res = NA, family = "")
+  par(mar = c(4, 4, 4, 4) + 0.1)
+  plot(x = AdultSamplesLag57[,"Year"],
+       y = AdultSamplesLag57[,AdultResvar],
+       type = "l", pch = 20, lwd = 2,
+       xlab = "",
+       ylab = "Anchovy SSB log")
+  par(new=TRUE)
+  plot(x = AdultSamplesLag57[,"Year"],
+       y = AdultSamplesLag57[,i],
+       type = "l", pch = 20, lwd = 2,
+       xlab = "Year",
+       yaxt = "n", ylab = NA,
+       col = "blue")
+  axis(4)
+  mtext(i, 4, line = 2)
+  dev.off()
+}
+
+#19 ALE all Expvars compare####
+library(beepr)
+#adults post57####
+AdultResvar <- "A_Tot_B"
+AdultSamples <- Annual[-which(is.na(Annual[AdultResvar])),] # remove NA rows
+AllSamplesLog <- AddLogs(x = AdultSamples, toLog = c("A_Tot_B",
+                                                       "Sml_P",
+                                                       "Lrg_P",
+                                                       "Jmac",
+                                                       "Cmac",
+                                                       "Biom_Sard_Alec"))
+AllExpvars <- c("NPGO_Spring", #ABUNDANCE NO CONSUMPTION
+                "SeaLevLA_PreW", #overruling SF spring (L) & SF preW (E)
+                "BUI33N_Spring",
+                "Stability_all", #overruling south (L)
+                "Temp_South", #overruling NCoast (A)
+                "Sal_South",
+                "O2AtDep_all", #overruling offshore(A)
+                "ChlA_all", #overruling nearshore(A)
+                "FishLand",
+                "Hake_Biom", #overruling hake
+                "Msquid_Biom",
+                "Rockfish_Biom",
+                "Krill_mgCm2",
+                "SeaLion",
+                "Albacore",
+                "Sablefish",
+                "ChinSal",
+                "Halibut",
+                "SoShWa",
+                "HBW",
+                "Hsquid",
+                "Sml_P_log",
+                "Lrg_P_log", #UP relationship
+                "Biom_Sard_Alec_log",
+                "Jmac_log", #UP relationship
+                "Cmac_log",
+                "A_Tot_B_log")
+
+AllSamplesLag <- AddLags(x = AllSamplesLog, lagYears = 1:3, toLag = AllExpvars)
+# lagyr1&0 contributed 7% av.inf before. Remove for simplicity, speed and data assess defensibility
+# no reason to exclude anchovy biomass lags however; remove L0&1 for others next
+
+AllExpvarsLag123 <- c(AllExpvars,
+                        paste0(AllExpvars, "_lag_1"),
+                        paste0(AllExpvars, "_lag_2"),
+                        paste0(AllExpvars, "_lag_3"))
+AllExpvarsLag123 <- AllExpvarsLag123[-c(9:21,23:27, #y0
+                                        36:48, 50:53, #y1
+                                        64)] #hakey2
+#remove hakeY2 & lag0&1 bio predator expvars, not A1 & Chl (quick to acquire) but inc krill (not since 2012) lrgP_ (2008)
+#hakeY2 relationship unexpectedly positive, Y0 1 & 3 all negative. Indexing something?
+
+gbm.bfcheck(samples = AllSamplesLag, resvar = "A_Tot_B_log", ZI = F)
+# [1] "  binary bag fraction must be at least 0.3684211"
+# [1] "Gaussian bag fraction must be at least 0.3684211" good
+AdultResvar <- "A_Tot_B_log"
+AllSamplesLag57 <- subset(AllSamplesLag, Year >= 1957) #n=51
+gbm.bfcheck(samples = AllSamplesLag57, resvar = "A_Tot_B_log", ZI = F) #0.412 good
+setwd(paste0(machine, "/simon/Dropbox/Farallon Institute/Data & Analysis/ModelOutputs/2018.11.07_AlogExpLag123abund"))
+gbm.loop(expvar = AllExpvarsLag123,
+         resvar = AdultResvar,
+         samples = AllSamplesLag57,
+         lr = 0.01, #0.1 
+         bf = 0.5,
+         ZI = F,
+         savegbm = FALSE,
+         BnW = FALSE,
+         simp = T,
+         multiplot = F,
+         varint = T,
+         alerts = F)
+beep(8)
+
+#larvae post51####
+LarvalResvar <- "Anch_Larvae_Peak"
+LarvalSamples <- Annual[-which(is.na(Annual[LarvalResvar])),]
+
+AllSamplesLog <- AddLogs(x = LarvalSamples, toLog = c("A_Tot_B",
+                                                     "Sml_P",
+                                                     "Lrg_P",
+                                                     "Jmac",
+                                                     "Cmac",
+                                                     "Biom_Sard_Alec",
+                                                     "Anch_Larvae_Peak"))
+AllSamplesLag <- AddLags(x = AllSamplesLog, lagYears = 1:3, toLag = AllExpvars)
+AllExpvarsLag123 <- c(AllExpvars,
+                      paste0(AllExpvars, "_lag_1"),
+                      paste0(AllExpvars, "_lag_2"),
+                      paste0(AllExpvars, "_lag_3"))
+AllExpvarsLag123 <- AllExpvarsLag123[-c(9:21,23:27, #y0
+                                        36:48, 50:53, #y1
+                                        64)] #hakey2
+LarvalResvar <- "Anch_Larvae_Peak_log"
+gbm.bfcheck(samples = AllSamplesLag, resvar = LarvalResvar, ZI = F) #0.333
+setwd(paste0(machine, "/simon/Dropbox/Farallon Institute/Data & Analysis/ModelOutputs/2018.11.07_AlogExpLag123abund"))
+
+gbm.loop(expvar = AllExpvarsLag123,
+         resvar = LarvalResvar,
+         samples = AllSamplesLag,
+         lr = 0.01, 
+         bf = 0.5,
+         ZI = F,
+         savegbm = FALSE,
+         BnW = FALSE,
+         simp = T,
+         multiplot = F,
+         varint = F,
+         cleanup = T)
+beep(8)
+
+#eggs post51####
+EggResvar <- "Anch_Egg_Peak"
+EggSamples <- Annual[-which(is.na(Annual[EggResvar])),]
+AllSamplesLog <- AddLogs(x = LarvalSamples, toLog = c("A_Tot_B",
+                                                      "Sml_P",
+                                                      "Lrg_P",
+                                                      "Jmac",
+                                                      "Cmac",
+                                                      "Biom_Sard_Alec",
+                                                      "Anch_Egg_Peak"))
+AllSamplesLag <- AddLags(x = AllSamplesLog, lagYears = 1:3, toLag = AllExpvars)
+gbm.bfcheck(samples = AllSamplesLag, resvar = EggResvar, ZI = F) #0.333
+setwd(paste0(machine, "/simon/Dropbox/Farallon Institute/Data & Analysis/ModelOutputs/2018.11.07_AlogExpLag123abund"))
+gbm.loop(expvar = AllExpvarsLag123,
+         resvar = EggResvar,
+         samples = AllSamplesLag,
+         lr = 0.01, 
+         bf = 0.5,
+         ZI = F,
+         savegbm = FALSE,
+         BnW = FALSE,
+         simp = T,
+         multiplot = F,
+         varint = F,
+         cleanup = T)
+beep(8)
+
+#20 E:L ratio as A expvar####
+AdultResvar <- "A_Tot_B"
+AdultSamples <- Annual[-which(is.na(Annual[AdultResvar])),] # remove NA rows
+
+#build E:L ratio
+#plot(AdultSamples[,"Anch_Egg_Peak"], AdultSamples[,"Anch_Larvae_Peak"])
+ELratio <- AdultSamples[,"Anch_Egg_Peak"] / AdultSamples[,"Anch_Larvae_Peak"]
+#plot(AdultSamples[,"Year"], ELratio)
+AdultSamples[,"ELratio"] <- ELratio
+
+AdultSamplesLog <- AddLogs(x = AdultSamples, toLog = c("A_Tot_B",
+                                                       "Sml_P",
+                                                       "Biom_Sard_Alec"))
+AdultExpvars <- c("NPGO_Spring", #ABUNDANCE NO CONSUMPTION
+                  "SeaLevLA_PreW",
+                  "BUI33N_Spring",
+                  "Stability_all",
+                  "Temp_NCoast",
+                  "Sal_South",
+                  "O2_Offsh",
+                  "ChlA_Nearsh",
+                  "FishLand",
+                  "Hake_Biom",
+                  "Msquid_Biom",
+                  "Rockfish_Biom",
+                  "Krill_mgCm2",
+                  "SeaLion",
+                  "Albacore",
+                  "Sablefish",
+                  "ChinSal",
+                  "Halibut",
+                  "SoShWa",
+                  "HBW",
+                  "Hsquid",
+                  "A_Tot_B",
+                  "Sml_P_log",
+                  "Biom_Sard_Alec_log",
+                  "ELratio")
+AdultSamplesLag <- AddLags(x = AdultSamplesLog, lagYears = 1:3, toLag = AdultExpvars)
+# lagyr1&0 contributed 7% av.inf before. Remove for simplicity, speed and data assess defensibility
+# no reason to exclude anchovy biomass lags however; remove L0&1 for others next
+
+AdultExpvarsLag123 <- c(AdultExpvars,
+                        paste0(AdultExpvars, "_lag_1"),
+                        paste0(AdultExpvars, "_lag_2"),
+                        paste0(AdultExpvars, "_lag_3"))
+AdultExpvarsLag123 <- AdultExpvarsLag123[-c(9:22,24:25, #y0
+                                        34:46, 49, #y1
+                                        60)] #hakey2
+
+gbm.bfcheck(samples = AdultSamplesLag, resvar = "A_Tot_B_log", ZI = F)
+# [1] "  binary bag fraction must be at least 0.3684211"
+# [1] "Gaussian bag fraction must be at least 0.3684211" good
+AdultResvar <- "A_Tot_B_log"
+AdultSamplesLag57 <- subset(AdultSamplesLag, Year >= 1957) #n=51
+gbm.bfcheck(samples = AdultSamplesLag57, resvar = "A_Tot_B_log", ZI = F) #0.412 good
+setwd(paste0(machine, "/simon/Dropbox/Farallon Institute/Data & Analysis/ModelOutputs/2018.11.07_AlogExpLag123abundELratio"))
+gbm.loop(expvar = AdultExpvarsLag123,
+         resvar = AdultResvar,
+         samples = AdultSamplesLag57,
+         lr = 0.01, #0.1 
+         bf = 0.5,
+         ZI = F,
+         savegbm = FALSE,
+         BnW = FALSE,
+         simp = T,
+         multiplot = F,
+         varint = T,
+         alerts = F,
+         cleanup = T)
+beep(8)
+
+
 #TODO####
-#Could re-run adults with Y01 environmentals added back?
 #Use TSS on final models, re run?
 #var.infs as radar plots, see https://www.r-graph-gallery.com/142-basic-radar-chart/ ,
 #need same order of vars & to uniformalise the scales per variable across ALE
