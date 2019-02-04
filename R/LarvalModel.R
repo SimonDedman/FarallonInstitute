@@ -4065,7 +4065,7 @@ subsloop <- gbm.subset(x = AdultExpvarsLag12, #from #12
 write.csv(subsloop, file = "gbmSubsetLoopAdultsLog.csv")
 # manual choices based on rounded 0 points from before:
 # sardine: 120000
-# hake: 1500000
+# hake: 1,500,000
 # anchovyY-1: 410000 log: log1p(410000) #12.92391
 
 # gbm.subset choices:
@@ -5354,24 +5354,33 @@ gbm.loop(expvar = AllExpvarsLag123,
          varint = T,
          alerts = F)
 beep(8)
-# manually simplify: expars w/ av.inf >= 1
-adultpost64expvars <- c("ChinSal_lag_2",
-"Halibut",
-"Sal_South_lag_3",
-"ChlA_all_lag_2",
-"SeaLion_lag_1",
-"A_Tot_B_log_lag_1",
-"Halibut_lag_2",
-"Temp_South_lag_3",
-"Halibut_lag_3",
-"Biom_Sard_Alec_log",
+# manually simplify: expars w/ av.inf >= 1, also excluded halibut3 @ 1.08
+adultpost64expvars <- c("ChlA_all_lag_2",
 "Sablefish_lag_1",
-"SeaLion")
+"Temp_South_lag_2",
+"ChlA_all_lag_1",
+"Krill_mgCm2_lag_3",
+"A_Tot_B_log_lag_1",
+"ChinSal_lag_2",
+"Sablefish_lag_2",
+"Halibut",
+"Biom_Sard_Alec_log_lag_2",
+"Sml_P_log",
+"Krill_mgCm2_lag_1",
+"Biom_Sard_Alec_log",
+"Hake_Biom_lag_2",
+"ChinSal_lag_3",
+"Hake_Biom_lag_1",
+"NPGO_Spring_lag_1",
+"FishLand",
+"ChlA_all_lag_3")
+
+
 setwd(paste0(machine, "/simon/Dropbox/Farallon Institute/Data & Analysis/ModelOutputs/2018.12.03_LrgPupdate/Adults_post64mansimp"))
 gbm.loop(expvar = adultpost64expvars,
          resvar = AdultResvar,
          samples = AllSamplesLag64,
-         lr = 0.0001, #0.1 
+         lr = 0.01, #0.1 
          bf = 0.8,
          ZI = F,
          savegbm = FALSE,
@@ -5400,25 +5409,32 @@ gbm.loop(expvar = AllExpvarsLag123,
          alerts = F)
 beep(8)
 # manually simplify: expars w/ av.inf >= 1
-adultpost81expvars <- c("Sal_South_lag_3",
-"Temp_South_lag_3",
-"ChlA_all_lag_2",
-"NPGO_Spring",
-"Halibut",
+adultpost81expvars <- c("ChlA_all_lag_2",
 "Sablefish_lag_1",
-"BUI33N_Spring_lag_2",
-"Hake_Biom_lag_3",
-"Hake_Biom_lag_2",
-"Rockfish_Biom_lag_2",
-"SeaLevLA_PreW_lag_1",
-"A_Tot_B_log_lag_1",
-"BUI33N_Spring_lag_1",
-"Hake_Biom_lag_1")
+                        "Hake_Biom_lag_2",
+                        "NPGO_Spring_lag_1",
+                        "Halibut",
+                        "BUI33N_Spring_lag_3",
+                        "BUI33N_Spring_lag_2",
+                        "Hake_Biom_lag_3",
+                        "Krill_mgCm2_lag_1",
+                        "Krill_mgCm2_lag_3",
+                        "NPGO_Spring",
+                        "Sablefish_lag_2",
+                        "A_Tot_B_log_lag_1",
+                        "Rockfish_Biom_lag_2",
+                        "FishLand",
+                        "ChlA_all_lag_1",
+                        "ChinSal_lag_1",
+                        "SeaLevLA_PreW_lag_1",
+                        "Hake_Biom_lag_1",
+                        "SeaLion_lag_2",
+                        "Sal_South_lag_3")
 setwd(paste0(machine, "/simon/Dropbox/Farallon Institute/Data & Analysis/ModelOutputs/2018.12.03_LrgPupdate/Adults_post81mansimp"))
 gbm.loop(expvar = adultpost81expvars,
          resvar = AdultResvar,
          samples = AllSamplesLag81,
-         lr = 0.0001, #0.1 
+         lr = 0.01, #0.1 
          bf = 0.7,
          ZI = F,
          savegbm = FALSE,
@@ -5704,8 +5720,14 @@ library(beepr)
   AdultResvar <- "A_Tot_B_log"
   AdultSamplesHiSard <- subset(AllSamplesLag, Biom_Sard_Alec > 120000)
   AdultSamplesLoSard <- subset(AllSamplesLag, Biom_Sard_Alec <= 120000)
+  log1p(120000)
+  log1p(100000)
+  exp(11)
+  exp(11.69)
+    log1p(410000)
   AdultSamplesLagHiAnch <- subset(AllSamplesLag, A_Tot_B_log_lag_1 > log1p(410000))
   AdultSamplesLagLoAnch <- subset(AllSamplesLag, A_Tot_B_log_lag_1 <= log1p(410000))
+  exp(13)
   
 setwd(paste0(machine, "/simon/Dropbox/Farallon Institute/Data & Analysis/ModelOutputs/2018.12.03_LrgPupdate/HiSard"))
 #won't run
@@ -5748,7 +5770,7 @@ setwd(paste0(machine, "/simon/Dropbox/Farallon Institute/Data & Analysis/ModelOu
 LarvalExpvarsLogLag123 %in% colnames(LarvalSamplesLogLagLoHake) #10 11 13 15 18 19 10small p log larval sampes not logged?
 gbm.loop(expvar = LarvalExpvarsLogLag123,
          resvar = LarvalResvar,
-         samples = LarvalSamplesLogLagLoHake,
+         samples = LarvalSamplesLogLagLoHake, #n=31
          lr = 0.001,  #tried 0.1 0.05
          bf = 0.8, #
          ZI = F,
@@ -5771,7 +5793,7 @@ EggExpvarsLogLag123 %in% colnames(EggSamplesHiSard)
 setwd(paste0(machine, "/simon/Dropbox/Farallon Institute/Data & Analysis/ModelOutputs/2018.12.03_LrgPupdate/HiSard"))
 gbm.loop(expvar = EggExpvarsLogLag123,
          resvar = EggResvar,
-         samples = EggSamplesHiSard,
+         samples = EggSamplesHiSard,  #n=29
          lr = 0.00001,
          bf = 0.85,
          ZI = F,
@@ -5787,7 +5809,7 @@ EggExpvarsLogLag123losard <- EggExpvarsLogLag123[-2]
 setwd(paste0(machine, "/simon/Dropbox/Farallon Institute/Data & Analysis/ModelOutputs/2018.12.03_LrgPupdate/LoSard"))
 gbm.loop(expvar = EggExpvarsLogLag123losard,
          resvar = EggResvar,
-         samples = EggSamplesLoSard,
+         samples = EggSamplesLoSard,  #n=33
          lr = 0.00001,
          bf = 0.85,
          ZI = F,
@@ -5801,7 +5823,7 @@ gbm.loop(expvar = EggExpvarsLogLag123losard,
 setwd(paste0(machine, "/simon/Dropbox/Farallon Institute/Data & Analysis/ModelOutputs/2018.12.03_LrgPupdate/LoHake"))
 gbm.loop(expvar = EggExpvarsLogLag123losard, #using sard expvars as they're the same
          resvar = EggResvar,
-         samples = EggSamplesLoHake,
+         samples = EggSamplesLoHake,  #n=31
          lr = 0.00001,
          bf = 0.85,
          ZI = F,
@@ -5815,7 +5837,7 @@ gbm.loop(expvar = EggExpvarsLogLag123losard, #using sard expvars as they're the 
 setwd(paste0(machine, "/simon/Dropbox/Farallon Institute/Data & Analysis/ModelOutputs/2018.12.03_LrgPupdate/LoAnch"))
 gbm.loop(expvar = EggExpvarsLogLag123losard,
          resvar = EggResvar,
-         samples = EggSamplesLoAnch,
+         samples = EggSamplesLoAnch,  #n=34
          lr = 0.001, #ran these with 0.000000001 and tried 0.1 also
          bf = 0.8,
          ZI = F,
@@ -5825,6 +5847,290 @@ gbm.loop(expvar = EggExpvarsLogLag123losard,
          multiplot = F,
          varint = F,
          cleanup = F)
+#24 rockfish sablefish reruns####
+setwd(paste0(machine, "/simon/Dropbox/Farallon Institute/Data & Analysis/ModelOutputs/2019.01.18_RockSable"))
+# rename columns #get rid of all, south, la, prewinter
+colnames(Annual)[which(colnames(Annual) == "Anch_Larvae_Peak")] <- "CSNA_Larvae"
+colnames(Annual)[which(colnames(Annual) == "A_Tot_B")] <- "CSNA_SSB"
+colnames(Annual)[which(colnames(Annual) == "Biom_Sard_Alec")] <- "Sardine"
+colnames(Annual)[which(colnames(Annual) == "ChinSal")] <- "Chinook_Salmon"
+colnames(Annual)[which(colnames(Annual) == "Cmac")] <- "Chub_Mackerel"
+colnames(Annual)[which(colnames(Annual) == "FishLand")] <- "Landings_CSNA"
+colnames(Annual)[which(colnames(Annual) == "Hake")] <- "Hake_Berger_Unused" #
+colnames(Annual)[which(colnames(Annual) == "Hake_Biom")] <- "Hake"
+colnames(Annual)[which(colnames(Annual) == "Hsquid")] <- "Humboldt_Squid"
+colnames(Annual)[which(colnames(Annual) == "Jmac")] <- "Jack_Mackerel"
+colnames(Annual)[which(colnames(Annual) == "Krill_mgCm2")] <- "Krill"
+colnames(Annual)[which(colnames(Annual) == "Lrg_P")] <- "Large_Plankton"
+colnames(Annual)[which(colnames(Annual) == "Msquid_Biom")] <- "Market_Squid"
+colnames(Annual)[which(colnames(Annual) == "O2AtDep_all")] <- "Oxygen"
+colnames(Annual)[which(colnames(Annual) == "Sal_South")] <- "Salinity"
+colnames(Annual)[which(colnames(Annual) == "Sml_P")] <- "Small_Plankton"
+colnames(Annual)[which(colnames(Annual) == "SoShWa")] <- "Sooty_Shearwater"
+colnames(Annual)[which(colnames(Annual) == "Temp_South")] <- "Temperature"
+colnames(Annual)[which(colnames(Annual) == "BUI33N_Spring")] <- "Upwelling"
+colnames(Annual)[which(colnames(Annual) == "ChlA_all")] <- "Chlorophyll_a"
+colnames(Annual)[which(colnames(Annual) == "HBW")] <- "Humpback_Whale"
+colnames(Annual)[which(colnames(Annual) == "NPGO_Spring")] <- "NPGO"
+colnames(Annual)[which(colnames(Annual) == "SeaLevLA_PreW")] <- "Sea_Level"
+colnames(Annual)[which(colnames(Annual) == "Stability_all")] <- "Stability"
+colnames(Annual)[which(colnames(Annual) == "SeaLevLA_PreW")] <- "Sea_Level"
+
+
+# rebuild samples objects with logs & lags now names have changed
+# ditch npc stream lat for expvars, sablefish, rockfish
+
+#adults57####
+AdultResvar <- "CSNA_SSB"
+AdultSamples <- Annual[-which(is.na(Annual[AdultResvar])),] # remove NA rows
+AllSamplesLog <- AddLogs(x = AdultSamples, toLog = c("CSNA_SSB",
+                                                     "Small_Plankton",
+                                                     "Large_Plankton",
+                                                     "Jack_Mackerel",
+                                                     "Chub_Mackerel",
+                                                     "Sardine"))
+AllExpvars <- c("NPGO", #ABUNDANCE NO CONSUMPTION
+                "Sea_Level", #overruling SF spring (L) & SF preW (E)
+                "Upwelling",
+                "Stability", #overruling south (L)
+                "Temperature", #overruling NCoast (A)
+                "Salinity",
+                "Oxygen", #overruling offshore(A)
+                "Chlorophyll_a", #overruling nearshore(A)
+                "Landings_CSNA",
+                "Hake", #overruling hake
+                "Market_Squid",
+                "Krill",
+                "SeaLion",
+                "Albacore",
+                "Chinook_Salmon",
+                "Halibut",
+                "Sooty_Shearwater",
+                "Humpback_Whale",
+                "Humboldt_Squid",
+                "Small_Plankton_log",
+                "Large_Plankton_log", #UP relationship
+                "Sardine_log",
+                "Jack_Mackerel_log", #UP relationship
+                "Chub_Mackerel_log",
+                "CSNA_SSB_log")
+
+AllSamplesLag <- AddLags(x = AllSamplesLog, lagYears = 1:3, toLag = AllExpvars)
+# lagyr1&0 contributed 7% av.inf before. Remove for simplicity, speed and data assess defensibility
+# no reason to exclude anchovy biomass lags however; remove L0&1 for others next
+
+AllExpvarsLag123 <- c(AllExpvars,
+                      paste0(AllExpvars, "_lag_1"),
+                      paste0(AllExpvars, "_lag_2"),
+                      paste0(AllExpvars, "_lag_3"))
+AllExpvarsLag123
+rmlist <- c("CSNA_SSB_log")
+rmlistnos <- match(rmlist, AllExpvarsLag123)
+AllExpvarsLag123 <- AllExpvarsLag123[-rmlistnos]
+#anchovy lag0
+
+AdultResvar <- "CSNA_SSB_log"
+
+setwd(paste0(machine, "/simon/Dropbox/Farallon Institute/Data & Analysis/ModelOutputs/2019.01.18_RockSable/Adults_post57"))
+AllSamplesLag57 <- subset(AllSamplesLag, Year >= 1957) #n=51
+gbm.bfcheck(samples = AllSamplesLag57, resvar = "CSNA_SSB_log", ZI = F) #0.412 good
+gbm.loop(expvar = AllExpvarsLag123,
+         resvar = AdultResvar,
+         samples = AllSamplesLag57,
+         lr = 0.005, #0.1 
+         bf = 0.5,
+         ZI = F,
+         savegbm = FALSE,
+         BnW = FALSE,
+         simp = T,
+         multiplot = F,
+         varint = T,
+         alerts = F)
+beep(8)
+
+#adults81####
+setwd(paste0(machine, "/simon/Dropbox/Farallon Institute/Data & Analysis/ModelOutputs/2019.01.18_RockSable/Adults_post81"))
+AllSamplesLag81 <- subset(AllSamplesLag, Year >= 1981) #n=51
+gbm.bfcheck(samples = AllSamplesLag57, resvar = "CSNA_SSB_log", ZI = F) #0.412 good
+gbm.loop(expvar = AllExpvarsLag123,
+         resvar = AdultResvar,
+         samples = AllSamplesLag81,
+         lr = 0.0001, #0.1 
+         bf = 0.7,
+         ZI = F,
+         savegbm = FALSE,
+         BnW = FALSE,
+         simp = F, #manually simplified. Didn't converge.
+         multiplot = F,
+         varint = T,
+         alerts = F)
+
+#larvae57####
+# change sea level & stability in larval samples later
+LarvalResvar <- "CSNA_Larvae"
+LarvalSamples <- Annual[-which(is.na(Annual[LarvalResvar])),]
+colnames(LarvalSamples)[which(colnames(LarvalSamples) == "SeaLevSF_Spring")] <- "Sea_Level"
+colnames(LarvalSamples)[which(colnames(LarvalSamples) == "Stab_South")] <- "Stability" ##dupe name
+
+LarvalSamplesLog <- AddLogs(x = LarvalSamples, toLog = c("CSNA_Larvae","CSNA_SSB",
+                                                         "Small_Plankton",
+                                                         "Large_Plankton",
+                                                         "Jack_Mackerel",
+                                                         "Chub_Mackerel",
+                                                         "Sardine"))
+LarvalExpvars <- c("NPGO",
+                   "Sea_Level",
+                   "Upwelling",
+                   "Stability", #overruling south (L)
+                   "Temperature", #overruling NCoast (A)
+                   "Salinity",
+                   "Oxygen", #overruling offshore(A)
+                   "Chlorophyll_a",
+                   "Small_Plankton_log",
+                   "Large_Plankton_log",
+                   "Hake",
+                   "Jack_Mackerel_log", #UP relationship
+                   "Chub_Mackerel_log",
+                   "Sardine_log",
+                   "Market_Squid", #UP w/ y-2
+                   "Krill", #UN relationship
+                   "CSNA_SSB_log") #remove y0 from expvar
+
+LarvalSamplesLogLag <- AddLags(x = LarvalSamplesLog, lagYears = 1:3, toLag = "CSNA_SSB_log")
+# lagyr1&0 contributed 7% av.inf before. Remove for simplicity, speed and data assess defensibility
+# no reason to exclude anchovy biomass lags however; remove L0&1 for others next
+
+LarvalExpvarsLogLag123 <- c(LarvalExpvars,
+                            paste0("CSNA_SSB_log", "_lag_1"),
+                            paste0("CSNA_SSB_log", "_lag_2"),
+                            paste0("CSNA_SSB_log", "_lag_3"))
+LarvalExpvarsLogLag123
+rmlist <- c("CSNA_SSB_log")
+rmlistnos <- match(rmlist, LarvalExpvarsLogLag123)
+LarvalExpvarsLogLag123 <- LarvalExpvarsLogLag123[-rmlistnos]
+
+
+LarvalResvar <- "CSNA_Larvae_log"
+
+LarvalSamplesLogLag57 <- subset(LarvalSamplesLogLag, Year >= 1957) #n=51
+gbm.bfcheck(samples = LarvalSamplesLogLag57, resvar = "CSNA_Larvae_log", ZI = F) #0.3684211 good
+setwd(paste0(machine, "/simon/Dropbox/Farallon Institute/Data & Analysis/ModelOutputs/2019.01.18_RockSable/Larvae_post57"))
+gbm.loop(expvar = LarvalExpvarsLogLag123,
+         resvar = LarvalResvar,
+         samples = LarvalSamplesLogLag57,
+         lr = 0.001, 
+         bf = 0.5,
+         ZI = F,
+         savegbm = FALSE,
+         BnW = FALSE,
+         simp = T,
+         multiplot = F,
+         varint = F,
+         cleanup = F)
+beep(8)
+
+#larvae81####
+LarvalSamplesLogLag81 <- subset(LarvalSamplesLogLag, Year >= 1981) #n=37
+gbm.bfcheck(samples = LarvalSamplesLogLag81, resvar = "CSNA_Larvae_log", ZI = F) #0.5675676
+setwd(paste0(machine, "/simon/Dropbox/Farallon Institute/Data & Analysis/ModelOutputs/2019.01.18_RockSable/Larvae_post81"))
+gbm.loop(expvar = LarvalExpvarsLogLag123,
+         resvar = LarvalResvar,
+         samples = LarvalSamplesLogLag81,
+         lr = 0.01, 
+         bf = 0.7,
+         ZI = F,
+         savegbm = FALSE,
+         BnW = FALSE,
+         simp = F, #won't run otherwise, does converge
+         multiplot = F,
+         varint = F,
+         cleanup = F)
+beep(8)
+
+#CSNA low####
+#adults####
+AdultResvar <- "CSNA_SSB_log"
+log1p(300000) #12.61154; see HiLoAnchSplitRationale.png in model paper folder
+#AdultSamplesLagHiAnch <- subset(AllSamplesLag, CSNA_SSB_log_lag_1 > log1p(300000)) #28
+#AdultSamplesLagLoAnch <- subset(AllSamplesLag, CSNA_SSB_log_lag_1 <= log1p(300000)) #28
+AdultSamplesLagHiAnch <- subset(AllSamplesLag, CSNA_SSB_log > log1p(300000)) #29
+AdultSamplesLagLoAnch <- subset(AllSamplesLag, CSNA_SSB_log <= log1p(300000)) #28
+gbm.bfcheck(samples = AdultSamplesLagHiAnch, resvar = "CSNA_SSB_log", ZI = F) #0.72 
+gbm.bfcheck(samples = AdultSamplesLagLoAnch, resvar = "CSNA_SSB_log", ZI = F) #0.75 
+
+AdultSamplesLagHiAnch <- subset(AllSamplesLag, CSNA_SSB_log > log1p(220000)) #31
+AdultSamplesLagLoAnch <- subset(AllSamplesLag, CSNA_SSB_log <= log1p(220000)) #26
+gbm.bfcheck(samples = AdultSamplesLagHiAnch, resvar = "CSNA_SSB_log", ZI = F) #0.677
+gbm.bfcheck(samples = AdultSamplesLagLoAnch, resvar = "CSNA_SSB_log", ZI = F) #0.807
+
+setwd(paste0(machine, "/simon/Dropbox/Farallon Institute/Data & Analysis/ModelOutputs/2019.01.18_RockSable/LoAnch"))
+
+# AllExpvarsLag123loanch <- AllExpvarsLag123[-c(15,20,21,41,46,47,68,73,74,95,100,101)] #remove HBW, Albacore, HSquid & lags, no data in losard subset
+dev.off()
+gbm.loop(expvar = AllExpvarsLag123,
+         resvar = AdultResvar,
+         samples = AdultSamplesLagLoAnch, #n=28
+         lr = 0.00001, #0.01
+         bf = 0.9,  #0.85
+         ZI = F,
+         savegbm = FALSE,
+         BnW = FALSE,
+         simp = F, #turn off?
+         multiplot = F,
+         varint = T,
+         alerts = F,
+         loops = 5) #won't run
+
+
+setwd(paste0(machine, "/simon/Dropbox/Farallon Institute/Data & Analysis/ModelOutputs/2019.01.18_RockSable/HiAnch"))
+dev.off()
+while (!is.null(dev.list()))  dev.off()
+dev.set(dev.next())
+gbm.loop(expvar = AllExpvarsLag123,
+         resvar = AdultResvar,
+         samples = AdultSamplesLagHiAnch, #n=28
+         lr = 0.00001,
+         bf = 0.8,
+         ZI = F,
+         savegbm = FALSE,
+         BnW = FALSE,
+         simp = F, #turn off?
+         multiplot = F,
+         varint = T,
+         alerts = F,
+         loops = 5) #won't run
+
+# remove from gbm.loop:         runautos = F
+setwd(paste0(machine, "/simon/Dropbox/Farallon Institute/Data & Analysis/ModelOutputs/2019.01.18_RockSable/HiAnch"))
+gbm.auto(expvar = AllExpvarsLag123,
+         resvar = AdultResvar,
+         samples = AdultSamplesLagHiAnch, #n=28
+         lr = 0.0000001,
+         bf = 0.8,
+         ZI = F,
+         savegbm = FALSE,
+         BnW = FALSE,
+         simp = F, #turn off?
+         multiplot = F,
+         varint = T,
+         alerts = F,
+         n.trees = 10) #won't run
+
+1 0.694618600602452
+2 0.702183700765982
+3 0.702519753833373
+4 0.700983346364254
+5 0.698594232067917
+6 0.700992787362851
+7 0.711056930551007
+8 0.70413394467027
+9 0.71315963245581
+
+#25 redo barplots####
+source('C:/Users/simon/Dropbox/Farallon Institute/FarallonInstitute/R/BRTbars.R')
+setwd("C:/Users/simon/Dropbox/Farallon Institute/Data & Analysis/ModelOutputs/2019.01.18_RockSable/HiAnch/IndividualRuns")
+BRTbars(inputfilename = "Gaussian BRT Variable contributions.csv",
+        usecol = 2)
 
 #TODO####
 #Use TSS on final models, re run?
