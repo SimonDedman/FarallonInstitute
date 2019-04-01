@@ -184,8 +184,24 @@ seasons <- data.frame("month" = c(12, 1:11), "season" = c(rep("PreWinter",3), re
 egg$season <- seasons$season[match(egg$month,seasons$month)]
 larvae$season <- seasons$season[match(larvae$month,seasons$month)]
 
+
+#SUBSET BY LINE+STATION####
+lineStations <- read_csv(paste0(machine, '/simon/Dropbox/Farallon Institute/Data & Analysis/Biological/Anchovy & Sardine Biomass/CalCOFI egg & larval trawl/CoreSCB_lineStationsList.csv'))
+egg$LineStation <- paste0(as.character(egg$line), "+", as.character(egg$station))
+larvae$LineStation <- paste0(as.character(larvae$line), "+", as.character(larvae$station))
+#class(lineStations)
+lineStations <- as.vector(lineStations$`Line+Station`)
+
+# filter for rows whereegg/larval line+stations are in core list (TRUE)
+tmp <- egg$LineStation  %in% lineStations
+egg <- egg[tmp,]
+
+tmp <- larvae$LineStation  %in% lineStations
+larvae <- larvae[tmp,]
+
+
 #6.4 compute annual season bin averages####
-eggMeans <- aggregate(Eggs10m2 ~ year + season, egg, mean) # new df, means by year and season
+eggMeans <- aggregate(Eggs10m2 ~ year + season, egg, mean) # new df, means by year and season aggregating all lines&stations
 eggMeans$season <- factor(eggMeans$season, levels = c("PreWinter", "Spring", "Summer", "Autumn")) # reorder season factors
 eggMeans <- eggMeans[with(eggMeans, order(year, season)),] # reorder df by year then season
 eggMeans <- spread(eggMeans, key = season, value = Eggs10m2) # spread AKA cast kindaAKA reshape df to wide format
@@ -195,8 +211,9 @@ larvalMeans$season <- factor(larvalMeans$season, levels = c("PreWinter", "Spring
 larvalMeans <- larvalMeans[with(larvalMeans, order(year, season)),]
 larvalMeans <- spread(larvalMeans, key = season, value = Larvae10m2)
 
-#6.5 compute peak (6mo) averages####
-peakseasons <- data.frame("month" = c(12, 1:11), "season" = c(rep("Peak",6), rep("NonPeak", 6)))
+#6.5 compute peak (5mo) averages####
+#Changed from Dec-May to Jan-May
+peakseasons <- data.frame("month" = c(12, 1:11), "season" = c("NonPeak", rep("Peak",5), rep("NonPeak", 6)))
 egg$peakseason <- peakseasons$season[match(egg$month,peakseasons$month)]
 larvae$peakseason <- peakseasons$season[match(larvae$month,peakseasons$month)]
 
@@ -266,7 +283,15 @@ tmp09 <- subset(x = egg, year == 2009 & month >= 3 & month <= 5) # n=402
 
 #8 writecsv####
 setwd(paste0(machine, '/simon/Dropbox/Farallon Institute/Data & Analysis/Biological/Anchovy & Sardine Biomass/CalCOFI egg & larval trawl/')) #set wd for export
-write_csv(x = eggMeans, path = "ERDDAP_CalCOFI_EggMeans.csv", na = "") # export
-write_csv(x = larvalMeans, path = "ERDDAP_CalCOFI_LarvalMeans.csv", na = "")
+write_csv(x = eggMeans, path = "ERDDAP_CalCOFI_EggMeans3.csv", na = "") # export
+write_csv(x = larvalMeans, path = "ERDDAP_CalCOFI_LarvalMeans3.csv", na = "")
+
+
+#9 check no directionality in absent line+stations per year####
+#pivottable, linestation as rows, years as columns, data as counts per year & linestation
+library(reshape2)
+larvae_lnSt_Yrs = dcast(larvae, LineStation ~ year, value.var = "Larvae10m2")
+# Aggregation function missing: defaulting to length. Fine that's what I want: count of occurrences of data.
+write_csv(x = larvae_lnSt_Yrs, path = "Larvae_LineStations_years.csv", na = "")
 
 #END####

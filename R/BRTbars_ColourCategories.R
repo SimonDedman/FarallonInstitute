@@ -2,7 +2,7 @@
 # Saves image, returns nothing
 # Simon Dedman, simondedman@gmail.com, 2019.02.04
 
-BRTbars <- function(inputfilename = "GausBarsGoodLoop.csv", #name of csv file with variable influence data, default GausBarsGoodLoop.csv
+BRTbarsCC <- function(inputfilename = "GausBarsGoodLoop.csv", #name of csv file with variable influence data, default GausBarsGoodLoop.csv
                     n = 15, #number of rows of bars to create, default 15
                     pngtype = "cairo-png", #png type, OS specific, default is cairo, for linux
                     labelscol = 1, # column containing labels i.e. variable names, default 1
@@ -12,8 +12,35 @@ BRTbars <- function(inputfilename = "GausBarsGoodLoop.csv", #name of csv file wi
                     
 tmpcsv <- read.csv(inputfilename, na.strings = "") #import csv file
 Bin_Bars <- tmpcsv[order(-tmpcsv[,usecol]),] #sort by influence% descending
-if(length(tmpcsv[,1]) < n) n <- length(tmpcsv[,1]) #if n requested bars > n variables, reduce bars to match variables
-Bin_Bars <- Bin_Bars[1:n,] #subset by n of requested rows
+
+library(stringr) #clean names with string remove & replace
+Bin_Bars[,1] %<>% 
+  str_remove_all("_log") %>% 
+  str_replace_all("Sea_Level", "Sea_Level_Height") %>% #sealevel, sealion, chinook, chl
+  str_replace_all("SeaLion", "Sea_lion") %>% 
+  str_replace_all("Chinook_Salmon", "Salmon") %>% 
+  str_replace_all("Chlorophyll_a", "Chlorophyll_A")
+
+lookup <- read.csv(paste0(machine, "/simon/Dropbox/Farallon Institute/Data & Analysis/ModelOutputs/VariableCategoriesLookup.csv"))
+
+for(i in 1:4){ #clean lookup table so it's same format
+  lookup[,i] %<>% 
+    str_remove_all("_log") %>% 
+    str_replace_all("Sea_Level", "Sea_Level_Height") %>% #sealevel, sealion, chinook, chl
+    str_replace_all("SeaLion", "Sea_lion") %>% 
+    str_replace_all("Chinook_Salmon", "Salmon") %>% 
+    str_replace_all("Chlorophyll_a", "Chlorophyll_A")
+}
+
+Bin_Bars_Cats = merge(Bin_Bars,
+                      lookup,
+                      by.x = "X",
+                      by.y = "Variable",
+                      all.x = T)
+
+Bin_Bars_Cats <- Bin_Bars_Cats[order(-Bin_Bars_Cats[,usecol]),] #sort by influence% descending
+if(length(Bin_Bars_Cats[,1]) < n) n <- length(Bin_Bars_Cats[,1]) #if n requested bars > n variables, reduce bars to match variables
+Bin_Bars_Cats <- Bin_Bars_Cats[1:n,] #subset by n of requested rows
 
 pointlineseqbin <- seq(0, length(Bin_Bars[,usecol]) - 1, 1)
 png(filename = outputfilename, width = 4*480, height = 4*480, units = "px",
